@@ -20,15 +20,14 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh; /* Altura completa viewport */
-            height: 100dvh; /* Altura dinámica para móviles modernos */
+            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             user-select: none;
-            touch-action: manipulation; /* Mejor respuesta tactil */
+            touch-action: manipulation;
             transition: background-color 0.1s ease-out;
         }
 
-        /* Header ajustado para móvil */
         header {
             flex: 0 0 auto;
             padding: 10px 0;
@@ -47,7 +46,6 @@
 
         .subtitle { font-size: 0.6rem; color: #888; }
 
-        /* Panel de Diagnóstico de Sensores */
         #sensor-debug {
             font-size: 0.55rem;
             color: #555;
@@ -60,9 +58,8 @@
         .status-ok { color: #00ff00; }
         .status-err { color: #ff0000; }
 
-        /* Área Visual Principal */
         #visualizer-container {
-            flex: 1 1 auto; /* Ocupa el espacio restante */
+            flex: 1 1 auto;
             position: relative;
             display: flex;
             justify-content: center;
@@ -76,10 +73,9 @@
             filter: drop-shadow(0 0 5px var(--primary-color));
         }
 
-        /* Palabra Fantasma */
         #current-word {
             position: absolute;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 0 20px var(--primary-color);
@@ -87,17 +83,19 @@
             text-align: center;
             width: 90%;
             opacity: 0;
-            transition: opacity 0.5s ease-out;
+            transition: opacity 0.3s ease-out;
             pointer-events: none;
             z-index: 20;
+            background: rgba(0,0,0,0.6); /* Fondo para lectura */
+            padding: 10px;
+            border-radius: 5px;
         }
 
-        /* Historial Flotante */
         #log-container {
             position: absolute;
             top: 10px;
             right: 10px;
-            width: 40%;
+            width: 45%;
             max-height: 150px;
             overflow-y: hidden;
             font-size: 0.6rem;
@@ -105,15 +103,14 @@
             pointer-events: none;
             z-index: 5;
             display: flex;
-            flex-direction: column-reverse; /* Lo más nuevo abajo visualmente si se invierte lógica */
+            flex-direction: column-reverse;
         }
         
-        .log-entry { margin-bottom: 3px; color: rgba(255, 255, 255, 0.7); text-shadow: 1px 1px 0 #000; }
+        .log-entry { margin-bottom: 3px; color: rgba(255, 255, 255, 0.8); text-shadow: 1px 1px 0 #000; }
 
-        /* Panel de Control - Optimizado para pulgares */
         #controls {
             flex: 0 0 auto;
-            padding: 20px 15px 30px 15px; /* Más padding abajo para iPhone home bar */
+            padding: 20px 15px 30px 15px;
             background: var(--panel-bg);
             border-top: 2px solid #333;
             display: flex;
@@ -132,7 +129,7 @@
 
         input[type=range] {
             width: 65%;
-            height: 25px; /* Área táctil más grande */
+            height: 25px;
             accent-color: var(--primary-color);
         }
 
@@ -155,32 +152,16 @@
             background: var(--primary-color);
             color: #000;
         }
-
-        /* Pantalla de "Gira tu teléfono" si se usa en horizontal */
-        @media screen and (orientation: landscape) and (max-height: 500px) {
-            #visualizer-container::after {
-                content: "MODO VERTICAL REQUERIDO";
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                background: black;
-                color: red;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-                z-index: 100;
-            }
-        }
     </style>
 </head>
 <body>
 
     <header>
         <h1>EXPLORACIONES OBR</h1>
-        <div class="subtitle">SENSOR SYSTEM PRO / iOS COMPATIBLE</div>
+        <div class="subtitle">RADIO SCANNER SYSTEM / AUDIO V2</div>
     </header>
 
-    <div id="sensor-debug">ESPERANDO INICIO...</div>
+    <div id="sensor-debug">ESPERANDO ACTIVACIÓN...</div>
 
     <div id="visualizer-container">
         <canvas id="scope"></canvas>
@@ -191,235 +172,312 @@
     <div id="controls">
         <div class="slider-group">
             <span>SENSIBILIDAD</span>
-            <input type="range" id="sensitivity" min="1" max="100" value="60">
+            <input type="range" id="sensitivity" min="1" max="100" value="65">
         </div>
         <div class="slider-group">
-            <span>REVERB</span>
-            <input type="range" id="reverb" min="0" max="100" value="30">
+            <span>RADIO VOL</span>
+            <input type="range" id="volume" min="0" max="100" value="40">
         </div>
-        <button class="btn-main" id="power-btn">INICIAR SENSORES</button>
+        <button class="btn-main" id="power-btn">ENCENDER RADIO</button>
     </div>
 
     <script>
-        // --- DICCIONARIO OBR ---
+       // --- DICCIONARIO MAESTRO OBR (VERSIÓN EXTENDIDA) ---
         const dictionary = [
-            "AYUDA", "AQUI", "FUERA", "MIEDO", "SOLO", "FRIO", "MUERTE", "CORRE", 
-            "ATRAS", "MIRA", "BAJO", "LUZ", "SOMBRA", "DOLOR", "NIÑO", "NIÑA", 
-            "MAMA", "PAPA", "FUEGO", "AGUA", "TIERRA", "AIRE", "ESCUCHA", "VEN", 
-            "VETE", "NOMBRE", "TUMBA", "CRUZ", "DIABLO", "DIOS", "SANTOS", "ROJO", 
-            "NEGRO", "SANGRE", "LLANTO", "GRITO", "PUERTA", "LLAVE", "CERRADO", 
-            "ABIERTO", "HOLA", "ADIOS", "NOCHE", "DIA", "AYER", "HOY", "SIEMPRE", 
-            "NUNCA", "ASESINO", "VIGILA", "ESCONDIDO", "OBREGON", "SONORA", "VALLE",
-            "CANAL", "RODEO", "HOTEL", "ESCUELA", "HOSPITAL", "CEMENTERIO", "ENTERRADO"
-        ];
+            // SALUDOS Y BÁSICOS
+            "HOLA", "ADIOS", "SI", "NO", "QUIZAS", "GRACIAS", "YO", "TU", "ELLOS", 
+            "NOSOTROS", "AHORA", "NUNCA", "SIEMPRE", "TARDE", "PRONTO", "ESPERA",
 
+            // ACCIONES (VERBOS)
+            "AYUDA", "CORRE", "VETE", "VEN", "MIRA", "ESCUCHA", "BUSCA", "ENCUENTRA",
+            "SIGUEME", "DETENTE", "CAMINA", "SIENTATE", "LEVANTATE", "CAER", "VOLAR",
+            "REZAR", "GRITAR", "LLORAR", "REIR", "MATAR", "MORIR", "VIVIR", "DORMIR",
+            "DESPERTAR", "ESCONDER", "MOSTRAR", "ROBAR", "ROMPER", "QUEMAR", "AHOGAR",
+            "ENTERRAR", "SALVAR", "PERDER", "GANAR", "JUGAR", "HABLAR", "CALLAR",
+            "TOCAR", "EMPUJAR", "JALAR", "CORTAR", "ATAR", "SOLTAR", "ABRIR", "CERRAR",
+
+            // EMOCIONES Y ESTADOS
+            "MIEDO", "TERROR", "PAZ", "ODIO", "AMOR", "TRISTEZA", "ALEGRIA", "IRA",
+            "DOLOR", "PLACER", "FRIO", "CALOR", "HAMBRE", "SED", "CANSADO", "FUERTE",
+            "DEBIL", "ENFERMO", "SANO", "LOCO", "CUERDO", "SOLO", "ACOMPAÑADO",
+            "CULPA", "VERGUENZA", "INOCENTE", "CULPABLE", "PERDIDO", "ATRAPADO",
+            "LIBRE", "SUCIO", "LIMPIO", "OSCURO", "CLARO", "PESADO", "LIGERO",
+
+            // PERSONAS Y ROLES
+            "MAMA", "PAPA", "HIJO", "HIJA", "HERMANO", "HERMANA", "ABUELO", "ABUELA",
+            "BEBE", "NIÑO", "NIÑA", "HOMBRE", "MUJER", "ANCIANO", "JOVEN", "AMIGO",
+            "ENEMIGO", "ESPOSO", "ESPOSA", "NOVIA", "NOVIO", "FAMILIA", "EXTRAÑO",
+            "DOCTOR", "ENFERMERA", "POLICIA", "SOLDADO", "CURA", "MONJA", "BRUJA",
+            "MAESTRO", "ALUMNO", "VICTIMA", "ASESINO", "LADRON", "VIGILANTE", "JEFE",
+
+            // LUGARES Y ENTORNO
+            "CASA", "HOGAR", "ESCUELA", "HOSPITAL", "IGLESIA", "CEMENTERIO", "TUMBA",
+            "PANTEON", "CALLE", "CAMINO", "CARRETERA", "PUENTE", "TUNEL", "BOSQUE",
+            "MONTE", "DESIERTO", "RIO", "LAGO", "MAR", "POZO", "CUEVA", "SOTANO",
+            "ATICO", "TECHO", "SUELO", "PARED", "PUERTA", "VENTANA", "ESCALERA",
+            "PASILLO", "CUARTO", "BAÑO", "COCINA", "SALA", "JARDIN", "PATIO",
+            "EDIFICIO", "HOTEL", "CARCEL", "GRANJA", "CAMPO", "CIUDAD", "PUEBLO",
+            "CANAL", "VALLE", "PRESA", "LOTE", "RUINAS", "ESQUINA",
+
+            // OBJETOS
+            "CUCHILLO", "ARMA", "PISTOLA", "BALA", "SOGA", "VENENO", "FUEGO", "AGUA",
+            "TIERRA", "AIRE", "PIEDRA", "MADERA", "CRISTAL", "ESPEJO", "RELOJ",
+            "FOTO", "LIBRO", "BIBLIA", "CRUZ", "ROSARIO", "VELA", "LUZ", "LAMPARA",
+            "SILLA", "CAMA", "MESA", "ROPA", "ZAPATOS", "JUGUETE", "MUÑECA", "PELOTA",
+            "DINERO", "ORO", "JOYAS", "ANILLO", "LLAVE", "CANDADO", "CADENA", "COCHE",
+            "CAMION", "RADIO", "TELEFONO", "CARTA", "PAPEL", "PLUMA", "SANGRE", "HUESO",
+
+            // PARANORMAL Y ABSTRACTO
+            "DIOS", "DIABLO", "SATANAS", "DEMONIO", "ANGEL", "ESPIRITU", "FANTASMA",
+            "ALMA", "MENTE", "CUERPO", "VIDA", "MUERTE", "INFIERNO", "CIELO", "PURGATORIO",
+            "LIMBO", "ETERNIDAD", "TIEMPO", "DESTINO", "SUERTE", "MALDICION", "MILAGRO",
+            "MAGIA", "RITUAL", "SACRIFICIO", "OFRENDA", "ALTAR", "SECTA", "CULTO",
+            "MISAS", "ORACION", "PECADOS", "PERDON", "VENGANZA", "JUSTICIA", "VERDAD",
+            "MENTIRA", "SECRETO", "MISTERIO", "SILENCIO", "RUIDO", "VOCES", "SOMBRAS",
+            "LUCES", "PRESENCIA", "ENERGIA", "VIBRACION", "SEÑAL", "MENSAJE",
+
+            // SALUD Y CAUSAS DE MUERTE
+            "ACCIDENTE", "CHOQUE", "CAIDA", "GOLPE", "HERIDA", "CORTE", "DISPARO",
+            "INFARTO", "CANCER", "FIEBRE", "PESTE", "VIRUS", "DOLOR", "ASFIXIA",
+            "SUICIDIO", "HOMICIDIO", "NATURAL", "VEJEZ", "PARTO", "ABORT", "CIRUGIA",
+            "PASTILLAS", "ALCOHOL", "DROGAS", "OVERDOSIS",
+
+            // TIEMPO Y NÚMEROS (Útil para fechas o cantidades)
+            "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE",
+            "DIEZ", "DOCE", "TREINTA", "CIEN", "MIL", "PRIMERO", "ULTIMO", "LUNES",
+            "VIERNES", "DOMINGO", "ENERO", "DICIEMBRE", "AÑO", "MES", "DIA", "HORA",
+            "MINUTO", "NOCHE", "MADRUGADA", "MAÑANA"
+        ];
         // Variables de Sistema
         let isRunning = false;
-        let audioContext, analyser, gainNode;
+        let audioContext, analyser, masterGain;
         let canvas, ctx;
         let lastSpeakTime = 0;
         
-        // Variables de Sensores Reales
-        let sensorData = {
-            alpha: 0, // Brújula / Magnetómetro
-            beta: 0,  // Inclinación X
-            gamma: 0, // Inclinación Y
-            accX: 0,
-            accY: 0,
-            accZ: 0
-        };
+        // Nodos de Audio para Efectos
+        let noiseNode, sweepLFO, sweepGain, filterNode;
         
+        // Variables de Sensores Reales
+        let sensorData = { alpha: 0, beta: 0, gamma: 0, accX: 0, accY: 0, accZ: 0 };
         let lastSensorData = { alpha: 0, beta: 0, gamma: 0 };
-        let sensorDeltaSum = 0; // Acumulador de cambios bruscos
 
         // DOM Elements
         const powerBtn = document.getElementById('power-btn');
         const sensitivityInput = document.getElementById('sensitivity');
+        const volumeInput = document.getElementById('volume');
         const wordDisplay = document.getElementById('current-word');
         const logContainer = document.getElementById('log-container');
         const debugPanel = document.getElementById('sensor-debug');
         const bodyElement = document.body;
 
-        // --- MANEJO DE PERMISOS IOS ---
-        async function requestPermissions() {
-            // iOS 13+ requiere permiso explícito para DeviceOrientation
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const permissionState = await DeviceOrientationEvent.requestPermission();
-                    if (permissionState === 'granted') {
-                        return true;
-                    } else {
-                        debugPanel.innerHTML = "<span class='status-err'>PERMISO DENEGADO POR USUARIO</span>";
-                        return false;
-                    }
-                } catch (e) {
-                    console.error(e);
-                    return false;
-                }
-            }
-            return true; // No es iOS o versión vieja
-        }
-
-        // --- INICIALIZACIÓN DE SENSORES ---
-        function startSensors() {
-            window.addEventListener('deviceorientation', handleOrientation);
-            window.addEventListener('devicemotion', handleMotion);
-            
-            // Verificar si estamos recibiendo datos después de 500ms
-            setTimeout(() => {
-                let statusMsg = "SENSORES: ";
-                const orientOK = sensorData.alpha !== 0 || sensorData.beta !== 0;
-                const motionOK = sensorData.accX !== 0 || sensorData.accY !== 0;
-
-                if(orientOK) statusMsg += "<span class='status-ok'>BRÚJULA [OK]</span> ";
-                else statusMsg += "<span class='status-err'>BRÚJULA [NO]</span> ";
-
-                if(motionOK) statusMsg += "<span class='status-ok'>MOVIMIENTO [OK]</span>";
-                else statusMsg += "<span class='status-err'>MOVIMIENTO [NO]</span>";
-
-                if(!orientOK && !motionOK) statusMsg += "<br>(Mueve el celular para activar)";
-
-                debugPanel.innerHTML = statusMsg;
-            }, 1000);
-        }
-
-        function stopSensors() {
-            window.removeEventListener('deviceorientation', handleOrientation);
-            window.removeEventListener('devicemotion', handleMotion);
-            debugPanel.innerHTML = "SISTEMA EN ESPERA";
-        }
-
-        function handleOrientation(event) {
-            // Alpha es la brújula (0-360), Beta/Gamma inclinación
-            sensorData.alpha = event.alpha || 0;
-            sensorData.beta = event.beta || 0;
-            sensorData.gamma = event.gamma || 0;
-        }
-
-        function handleMotion(event) {
-            // Aceleración incluyendo gravedad
-            sensorData.accX = event.accelerationIncludingGravity.x || 0;
-            sensorData.accY = event.accelerationIncludingGravity.y || 0;
-            sensorData.accZ = event.accelerationIncludingGravity.z || 0;
-        }
-
-        // --- MOTOR DE AUDIO ---
-        function initAudio() {
+        // --- MOTOR DE AUDIO AVANZADO (RADIO AM SIMULATOR) ---
+        function initRadioAudio() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioContext = new AudioContext();
             
-            // Ruido Rosa/Blanco
+            // 1. Nodo Maestro de Volumen
+            masterGain = audioContext.createGain();
+            masterGain.gain.value = volumeInput.value / 100;
+            masterGain.connect(audioContext.destination);
+
+            // 2. Analizador (Para el visualizador)
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            masterGain.connect(analyser); // Conectar salida al analizador
+
+            // 3. Generador de Ruido Rosa (Base de estática)
             const bufferSize = 2 * audioContext.sampleRate;
             const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
             const output = noiseBuffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
-                // Math.random base + inyección leve de datos de sensor para "semilla"
-                output[i] = (Math.random() * 2 - 1);
+                // Algoritmo de ruido rosa aproximado
+                const white = Math.random() * 2 - 1;
+                output[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = output[i];
+                output[i] *= 3.5; // Compensar ganancia
             }
+            noiseNode = audioContext.createBufferSource();
+            noiseNode.buffer = noiseBuffer;
+            noiseNode.loop = true;
 
-            const whiteNoise = audioContext.createBufferSource();
-            whiteNoise.buffer = noiseBuffer;
-            whiteNoise.loop = true;
+            // 4. Filtro de Paso de Banda (Simula el dial de la radio)
+            filterNode = audioContext.createBiquadFilter();
+            filterNode.type = 'bandpass';
+            filterNode.Q.value = 2; // Ancho de banda
+            filterNode.frequency.value = 1000;
+
+            // 5. LFO de Barrido (El "Fantasma" moviendo la perilla)
+            // Esto hace que el sonido suba y baje "wooosh... wooosh..."
+            sweepLFO = audioContext.createOscillator();
+            sweepLFO.type = 'sine';
+            sweepLFO.frequency.value = 0.5; // Velocidad del barrido (0.5 Hz)
             
-            const filter = audioContext.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 1000;
+            sweepGain = audioContext.createGain();
+            sweepGain.gain.value = 800; // Cuánto se mueve la perilla (Hz)
 
-            gainNode = audioContext.createGain();
-            gainNode.gain.value = 0.05;
+            // CONEXIONES
+            // LFO -> SweepGain -> Frecuencia del Filtro
+            sweepLFO.connect(sweepGain);
+            sweepGain.connect(filterNode.frequency);
 
-            analyser = audioContext.createAnalyser();
-            analyser.fftSize = 2048;
+            // Ruido -> Filtro -> Master
+            noiseNode.connect(filterNode);
+            filterNode.connect(masterGain);
 
-            whiteNoise.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(analyser);
-            analyser.connect(audioContext.destination);
-            
-            whiteNoise.start(0);
+            // INICIAR
+            noiseNode.start(0);
+            sweepLFO.start(0);
+
+            // Iniciar bucle de interferencias aleatorias
+            scheduleInterference();
         }
 
+        let lastOut = 0;
+
+        // --- GENERADOR DE "RECHINIDOS" (INTERFERENCIAS) ---
+        function playRadioInterference() {
+            if (!isRunning) return;
+
+            // Crear oscilador para el "pitido"
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            
+            // Tipos de onda: Sawtooth o Sine suenan más a radio rota
+            osc.type = Math.random() > 0.5 ? 'sine' : 'sawtooth';
+            
+            // Frecuencia aleatoria aguda (1000Hz - 4000Hz)
+            const freq = 1000 + Math.random() * 3000;
+            osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            
+            // Efecto de caída de tono (Doppler/Sintonización rápida)
+            if (Math.random() > 0.3) {
+                osc.frequency.exponentialRampToValueAtTime(freq / 2, audioContext.currentTime + 0.2);
+            }
+
+            // Volumen
+            gain.gain.setValueAtTime(0.05, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+            // Conectar y disparar
+            osc.connect(gain);
+            gain.connect(masterGain);
+
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.25);
+        }
+
+        // Programador de sonidos aleatorios
+        function scheduleInterference() {
+            if (!isRunning) return;
+            const timeToNext = 500 + Math.random() * 2000; // Cada 0.5 a 2.5 segundos
+            setTimeout(() => {
+                playRadioInterference();
+                scheduleInterference();
+            }, timeToNext);
+        }
+
+        // --- MANEJO DE SENSORES Y PERMISOS ---
+        async function requestPermissions() {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    return permission === 'granted';
+                } catch (e) { return false; }
+            }
+            return true;
+        }
+
+        function startSensors() {
+            window.addEventListener('deviceorientation', e => {
+                sensorData.alpha = e.alpha || 0;
+                sensorData.beta = e.beta || 0;
+                sensorData.gamma = e.gamma || 0;
+            });
+            window.addEventListener('devicemotion', e => {
+                sensorData.accX = e.accelerationIncludingGravity.x || 0;
+                sensorData.accY = e.accelerationIncludingGravity.y || 0;
+            });
+            
+            setTimeout(() => {
+                const orient = sensorData.alpha !== 0 || sensorData.beta !== 0;
+                debugPanel.innerHTML = orient 
+                    ? "SISTEMA ACTIVO: <span class='status-ok'>SENSOR MAGNÉTICO OK</span>" 
+                    : "SISTEMA ACTIVO: <span class='status-err'>SIMULACIÓN (SENSOR BLOQUEADO)</span>";
+            }, 1000);
+        }
+
+        // --- TEXT TO SPEECH ---
         function speak(text) {
             if ('speechSynthesis' in window) {
-                // Cancelar cualquier cosa que se esté diciendo
                 window.speechSynthesis.cancel();
-
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'es-MX';
-                utterance.pitch = 0.7; // Voz más profunda
-                utterance.rate = 0.8;
-                utterance.volume = 1;
-
+                utterance.pitch = 0.6; // Voz más grave y fantasmagórica
+                utterance.rate = 0.85;
+                
                 wordDisplay.innerText = text;
                 wordDisplay.style.opacity = 1;
                 
                 const p = document.createElement('div');
                 p.className = 'log-entry';
-                const time = new Date().toLocaleTimeString().split(' ')[0];
-                p.innerText = `[${time}] ${text}`;
+                p.innerText = `> ${text}`;
                 logContainer.prepend(p);
 
                 window.speechSynthesis.speak(utterance);
-                
-                setTimeout(() => { wordDisplay.style.opacity = 0; }, 2500);
+                setTimeout(() => { wordDisplay.style.opacity = 0; }, 3000);
             }
         }
 
         function triggerFlash() {
-            bodyElement.style.backgroundColor = 'var(--primary-color)';
-            setTimeout(() => {
-                 bodyElement.style.backgroundColor = 'var(--bg-color)';
-            }, 100);
+            bodyElement.style.backgroundColor = '#400000'; // Flash Rojo Oscuro
+            setTimeout(() => bodyElement.style.backgroundColor = 'var(--bg-color)', 150);
         }
 
-        // --- BUCLE PRINCIPAL (LOOP) ---
+        // --- LOOP PRINCIPAL ---
         function loop() {
             if (!isRunning) return;
             requestAnimationFrame(loop);
 
-            // 1. Calcular "Delta" (Cambio en sensores)
-            // Calculamos cuánto cambiaron los valores desde el último frame
-            let delta = 
-                Math.abs(sensorData.alpha - lastSensorData.alpha) +
-                Math.abs(sensorData.beta - lastSensorData.beta) +
-                Math.abs(sensorData.gamma - lastSensorData.gamma);
+            // 1. Detectar cambios en sensores
+            let delta = Math.abs(sensorData.alpha - lastSensorData.alpha) +
+                        Math.abs(sensorData.beta - lastSensorData.beta) +
+                        Math.abs(sensorData.gamma - lastSensorData.gamma);
 
-            // Filtro de ruido simple para evitar disparos por temblor de mano
-            if (delta < 0.5) delta = 0; // Ignorar micro movimientos
-            
-            // Factor aleatorio base (siempre hay un poco de azar, como en la app real)
-            let randomNoise = Math.random() * 2; 
-            
-            // Valor total de "Anomalía"
-            let anomalyScore = delta + randomNoise;
+            if (delta < 0.2) delta = 0; // Filtrar ruido base
 
-            // Guardar estado para siguiente frame
+            // 2. Calcular probabilidad de disparo
+            // Si hay movimiento brusco o magnetismo, delta sube.
+            // Si delta sube, aumentamos la frecuencia del "Barrido" de radio para simular tensión
+            if (delta > 2 && sweepLFO) {
+                sweepLFO.frequency.value = 2.0; // Radio busca rápido
+            } else if (sweepLFO) {
+                sweepLFO.frequency.value = 0.5; // Radio busca lento
+            }
+
             lastSensorData = { ...sensorData };
 
-            // 2. Umbral de disparo
-            // Slider 1 (Poco Sensible) a 100 (Muy Sensible)
-            // Invertimos lógica: Slider Alto = Umbral Bajo
+            // Umbral de disparo
             const sensValue = parseInt(sensitivityInput.value);
-            const triggerThreshold = 105 - sensValue; // Si sens=100, umbral=5. Si sens=1, umbral=104
-
+            const triggerThreshold = 102 - sensValue; 
+            const randomFactor = Math.random() * 2; 
+            
             const now = Date.now();
 
-            // Lógica de disparo
-            if (anomalyScore > triggerThreshold && (now - lastSpeakTime > 3000)) {
-                // Disparo confirmado
+            if ((delta + randomFactor) > triggerThreshold && (now - lastSpeakTime > 3000)) {
                 triggerFlash();
                 const word = dictionary[Math.floor(Math.random() * dictionary.length)];
                 
-                // Glitch de audio
-                gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.5);
+                // Efecto: Bajar volumen de radio al hablar
+                if(masterGain) {
+                    masterGain.gain.setValueAtTime(masterGain.gain.value, audioContext.currentTime);
+                    masterGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.1);
+                    masterGain.gain.linearRampToValueAtTime(volumeInput.value/100, audioContext.currentTime + 1.5);
+                }
                 
                 speak(word);
                 lastSpeakTime = now;
             }
 
-            // 3. Dibujar Visualizador
             drawScope();
         }
 
@@ -428,79 +486,67 @@
             const dataArray = new Uint8Array(bufferLength);
             analyser.getByteTimeDomainData(dataArray);
 
-            ctx.fillStyle = 'rgba(5, 5, 5, 1)'; 
+            ctx.fillStyle = 'rgba(5, 5, 5, 1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.lineWidth = 2;
             ctx.strokeStyle = '#ff0000';
             ctx.beginPath();
 
             const sliceWidth = canvas.width * 1.0 / bufferLength;
             let x = 0;
-
             for(let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
-                
-                // Modificar la onda visualmente si hay actividad en sensores
-                let jitter = 0;
-                if(sensorData.accX > 1 || sensorData.accY > 1) {
-                    jitter = (Math.random() - 0.5) * 10;
-                }
-
-                const y = (v * canvas.height / 2) + jitter;
-
-                if(i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-
+                const y = v * canvas.height / 2;
+                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 x += sliceWidth;
             }
             ctx.lineTo(canvas.width, canvas.height/2);
             ctx.stroke();
         }
 
-        // --- CONTROLADORES DE EVENTOS ---
+        // --- CONTROLES ---
+        volumeInput.addEventListener('input', (e) => {
+            if(masterGain) masterGain.gain.value = e.target.value / 100;
+        });
+
         powerBtn.addEventListener('click', async () => {
             if (!isRunning) {
-                // 1. Pedir permisos primero (Crucial para iOS)
                 const granted = await requestPermissions();
-                
                 if(granted) {
-                    if (!audioContext) initAudio();
+                    if (!audioContext) initRadioAudio();
                     if (audioContext.state === 'suspended') audioContext.resume();
                     
                     startSensors();
                     isRunning = true;
-                    
-                    powerBtn.innerText = "DETENER";
-                    powerBtn.style.borderColor = "#fff";
+                    powerBtn.innerText = "APAGAR RADIO";
                     powerBtn.style.color = "#fff";
+                    powerBtn.style.borderColor = "#fff";
                     
-                    // Setup Canvas
                     canvas = document.getElementById('scope');
                     ctx = canvas.getContext('2d');
-                    resizeCanvas();
+                    canvas.width = document.getElementById('visualizer-container').offsetWidth;
+                    canvas.height = document.getElementById('visualizer-container').offsetHeight;
                     
                     loop();
                 }
             } else {
                 isRunning = false;
-                stopSensors();
-                powerBtn.innerText = "INICIAR SENSORES";
-                powerBtn.style.borderColor = "var(--primary-color)";
+                powerBtn.innerText = "ENCENDER RADIO";
                 powerBtn.style.color = "var(--primary-color)";
+                powerBtn.style.borderColor = "var(--primary-color)";
                 window.speechSynthesis.cancel();
+                if(audioContext) audioContext.close();
+                audioContext = null;
+                debugPanel.innerText = "SISTEMA OFF";
             }
         });
 
-        function resizeCanvas() {
-            const container = document.getElementById('visualizer-container');
-            if(canvas && container) {
-                canvas.width = container.offsetWidth;
-                canvas.height = container.offsetHeight;
+        window.addEventListener('resize', () => {
+            if(canvas) {
+                canvas.width = document.getElementById('visualizer-container').offsetWidth;
+                canvas.height = document.getElementById('visualizer-container').offsetHeight;
             }
-        }
-        window.addEventListener('resize', resizeCanvas);
-
+        });
     </script>
 </body>
 </html>
