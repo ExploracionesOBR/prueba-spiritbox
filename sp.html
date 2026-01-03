@@ -201,16 +201,71 @@
     </div>
 
     <script>
-        // --- DICCIONARIO OBR ---
+       // --- DICCIONARIO MAESTRO OBR (VERSIÓN EXTENDIDA) ---
         const dictionary = [
-            "AYUDA", "AQUI", "FUERA", "MIEDO", "SOLO", "FRIO", "MUERTE", "CORRE", 
-            "ATRAS", "MIRA", "BAJO", "LUZ", "SOMBRA", "DOLOR", "NIÑO", "NIÑA", 
-            "MAMA", "PAPA", "FUEGO", "AGUA", "TIERRA", "AIRE", "ESCUCHA", "VEN", 
-            "VETE", "NOMBRE", "TUMBA", "CRUZ", "DIABLO", "DIOS", "SANTOS", "ROJO", 
-            "NEGRO", "SANGRE", "LLANTO", "GRITO", "PUERTA", "LLAVE", "CERRADO", 
-            "ABIERTO", "HOLA", "ADIOS", "NOCHE", "DIA", "AYER", "HOY", "SIEMPRE", 
-            "NUNCA", "ASESINO", "VIGILA", "ESCONDIDO", "OBREGON", "SONORA", "VALLE",
-            "CANAL", "RODEO", "HOTEL", "ESCUELA", "HOSPITAL", "CEMENTERIO", "ENTERRADO"
+            // SALUDOS Y BÁSICOS
+            "HOLA", "ADIOS", "SI", "NO", "QUIZAS", "GRACIAS", "YO", "TU", "ELLOS", 
+            "NOSOTROS", "AHORA", "NUNCA", "SIEMPRE", "TARDE", "PRONTO", "ESPERA",
+
+            // ACCIONES (VERBOS)
+            "AYUDA", "CORRE", "VETE", "VEN", "MIRA", "ESCUCHA", "BUSCA", "ENCUENTRA",
+            "SIGUEME", "DETENTE", "CAMINA", "SIENTATE", "LEVANTATE", "CAER", "VOLAR",
+            "REZAR", "GRITAR", "LLORAR", "REIR", "MATAR", "MORIR", "VIVIR", "DORMIR",
+            "DESPERTAR", "ESCONDER", "MOSTRAR", "ROBAR", "ROMPER", "QUEMAR", "AHOGAR",
+            "ENTERRAR", "SALVAR", "PERDER", "GANAR", "JUGAR", "HABLAR", "CALLAR",
+            "TOCAR", "EMPUJAR", "JALAR", "CORTAR", "ATAR", "SOLTAR", "ABRIR", "CERRAR",
+
+            // EMOCIONES Y ESTADOS
+            "MIEDO", "TERROR", "PAZ", "ODIO", "AMOR", "TRISTEZA", "ALEGRIA", "IRA",
+            "DOLOR", "PLACER", "FRIO", "CALOR", "HAMBRE", "SED", "CANSADO", "FUERTE",
+            "DEBIL", "ENFERMO", "SANO", "LOCO", "CUERDO", "SOLO", "ACOMPAÑADO",
+            "CULPA", "VERGUENZA", "INOCENTE", "CULPABLE", "PERDIDO", "ATRAPADO",
+            "LIBRE", "SUCIO", "LIMPIO", "OSCURO", "CLARO", "PESADO", "LIGERO",
+
+            // PERSONAS Y ROLES
+            "MAMA", "PAPA", "HIJO", "HIJA", "HERMANO", "HERMANA", "ABUELO", "ABUELA",
+            "BEBE", "NIÑO", "NIÑA", "HOMBRE", "MUJER", "ANCIANO", "JOVEN", "AMIGO",
+            "ENEMIGO", "ESPOSO", "ESPOSA", "NOVIA", "NOVIO", "FAMILIA", "EXTRAÑO",
+            "DOCTOR", "ENFERMERA", "POLICIA", "SOLDADO", "CURA", "MONJA", "BRUJA",
+            "MAESTRO", "ALUMNO", "VICTIMA", "ASESINO", "LADRON", "VIGILANTE", "JEFE",
+
+            // LUGARES Y ENTORNO
+            "CASA", "HOGAR", "ESCUELA", "HOSPITAL", "IGLESIA", "CEMENTERIO", "TUMBA",
+            "PANTEON", "CALLE", "CAMINO", "CARRETERA", "PUENTE", "TUNEL", "BOSQUE",
+            "MONTE", "DESIERTO", "RIO", "LAGO", "MAR", "POZO", "CUEVA", "SOTANO",
+            "ATICO", "TECHO", "SUELO", "PARED", "PUERTA", "VENTANA", "ESCALERA",
+            "PASILLO", "CUARTO", "BAÑO", "COCINA", "SALA", "JARDIN", "PATIO",
+            "EDIFICIO", "HOTEL", "CARCEL", "GRANJA", "CAMPO", "CIUDAD", "PUEBLO",
+            "CANAL", "VALLE", "PRESA", "LOTE", "RUINAS", "ESQUINA",
+
+            // OBJETOS
+            "CUCHILLO", "ARMA", "PISTOLA", "BALA", "SOGA", "VENENO", "FUEGO", "AGUA",
+            "TIERRA", "AIRE", "PIEDRA", "MADERA", "CRISTAL", "ESPEJO", "RELOJ",
+            "FOTO", "LIBRO", "BIBLIA", "CRUZ", "ROSARIO", "VELA", "LUZ", "LAMPARA",
+            "SILLA", "CAMA", "MESA", "ROPA", "ZAPATOS", "JUGUETE", "MUÑECA", "PELOTA",
+            "DINERO", "ORO", "JOYAS", "ANILLO", "LLAVE", "CANDADO", "CADENA", "COCHE",
+            "CAMION", "RADIO", "TELEFONO", "CARTA", "PAPEL", "PLUMA", "SANGRE", "HUESO",
+
+            // PARANORMAL Y ABSTRACTO
+            "DIOS", "DIABLO", "SATANAS", "DEMONIO", "ANGEL", "ESPIRITU", "FANTASMA",
+            "ALMA", "MENTE", "CUERPO", "VIDA", "MUERTE", "INFIERNO", "CIELO", "PURGATORIO",
+            "LIMBO", "ETERNIDAD", "TIEMPO", "DESTINO", "SUERTE", "MALDICION", "MILAGRO",
+            "MAGIA", "RITUAL", "SACRIFICIO", "OFRENDA", "ALTAR", "SECTA", "CULTO",
+            "MISAS", "ORACION", "PECADOS", "PERDON", "VENGANZA", "JUSTICIA", "VERDAD",
+            "MENTIRA", "SECRETO", "MISTERIO", "SILENCIO", "RUIDO", "VOCES", "SOMBRAS",
+            "LUCES", "PRESENCIA", "ENERGIA", "VIBRACION", "SEÑAL", "MENSAJE",
+
+            // SALUD Y CAUSAS DE MUERTE
+            "ACCIDENTE", "CHOQUE", "CAIDA", "GOLPE", "HERIDA", "CORTE", "DISPARO",
+            "INFARTO", "CANCER", "FIEBRE", "PESTE", "VIRUS", "DOLOR", "ASFIXIA",
+            "SUICIDIO", "HOMICIDIO", "NATURAL", "VEJEZ", "PARTO", "ABORT", "CIRUGIA",
+            "PASTILLAS", "ALCOHOL", "DROGAS", "OVERDOSIS",
+
+            // TIEMPO Y NÚMEROS (Útil para fechas o cantidades)
+            "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE",
+            "DIEZ", "DOCE", "TREINTA", "CIEN", "MIL", "PRIMERO", "ULTIMO", "LUNES",
+            "VIERNES", "DOMINGO", "ENERO", "DICIEMBRE", "AÑO", "MES", "DIA", "HORA",
+            "MINUTO", "NOCHE", "MADRUGADA", "MAÑANA"
         ];
 
         // Variables de Sistema
@@ -503,4 +558,5 @@
 
     </script>
 </body>
+
 </html>
