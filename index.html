@@ -2,551 +2,472 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOX - EXPLORACIONES OBR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VOX OBR">
+    
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVk9YIE9CUiBQcm8iLCJzaG9ydF9uYW1lIjoiVk9YIE9CUiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMDAwMDAwIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vdmlhLnBsYWNlaG9sZGVyLmNvbS8xOTIiLCJzaXplcyI6IjE5MngxOTIiLCJ0eXBlIjoiaW1hZ2UvcG5nIn1dfQ==">
+
+    <title>EXPLORACIONES OBR - VOX</title>
     <style>
         :root {
-            --primary-color: #ff0000;
-            --bg-color: #050505;
-            --text-color: #e0e0e0;
-            --panel-bg: rgba(20, 20, 20, 0.95);
+            --primary: #ff0000;
+            --accent: #fff;
+            --bg: #000;
+            --panel: rgba(10, 10, 10, 0.95);
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg);
+            color: #e0e0e0;
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
             height: 100dvh;
             overflow: hidden;
-            user-select: none;
-            touch-action: manipulation;
-            transition: background-color 0.1s ease-out;
-        }
-
-        header {
-            flex: 0 0 auto;
-            padding: 10px 0;
-            text-align: center;
-            background: linear-gradient(180deg, rgba(50,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-            z-index: 10;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
-        }
-
-        .subtitle { font-size: 0.6rem; color: #888; }
-
-        #sensor-debug {
-            font-size: 0.55rem;
-            color: #555;
-            text-align: center;
-            padding: 5px;
-            border-bottom: 1px solid #222;
-            white-space: pre-wrap;
-            line-height: 1.2;
-        }
-        .status-ok { color: #00ff00; }
-        .status-err { color: #ff0000; }
-
-        #visualizer-container {
-            flex: 1 1 auto;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 5px var(--primary-color));
-        }
-
-        #current-word {
-            position: absolute;
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 20px var(--primary-color);
-            text-transform: uppercase;
-            text-align: center;
-            width: 90%;
-            opacity: 0;
-            transition: opacity 0.3s ease-out;
-            pointer-events: none;
-            z-index: 20;
-            background: rgba(0,0,0,0.6); /* Fondo para lectura */
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        #log-container {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 45%;
-            max-height: 150px;
-            overflow-y: hidden;
-            font-size: 0.6rem;
-            text-align: right;
-            pointer-events: none;
-            z-index: 5;
-            display: flex;
-            flex-direction: column-reverse;
-        }
-        
-        .log-entry { margin-bottom: 3px; color: rgba(255, 255, 255, 0.8); text-shadow: 1px 1px 0 #000; }
-
-        #controls {
-            flex: 0 0 auto;
-            padding: 20px 15px 30px 15px;
-            background: var(--panel-bg);
-            border-top: 2px solid #333;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            z-index: 50;
+            user-select: none;
         }
 
-        .slider-group {
+        /* Indicador de Estado Superior */
+        #status-bar {
+            height: 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.75rem;
-            font-weight: bold;
+            padding: 0 15px;
+            font-size: 0.7rem;
+            background: linear-gradient(180deg, rgba(50,0,0,0.6) 0%, transparent 100%);
+            z-index: 20;
+            margin-top: env(safe-area-inset-top);
         }
 
-        input[type=range] {
-            width: 65%;
-            height: 25px;
-            accent-color: var(--primary-color);
+        .mic-status { color: #555; font-weight: bold; transition: color 0.2s; }
+        .mic-active { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+        .ghost-active { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+
+        /* Área Principal de Visualización */
+        #main-display {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .btn-main {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 18px;
-            font-size: 1.1rem;
+        /* Palabra Fantasma Gigante */
+        #ghost-word {
+            font-size: 3.5rem;
             font-weight: 900;
-            cursor: pointer;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 30px var(--primary);
             text-transform: uppercase;
-            letter-spacing: 2px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
-            touch-action: manipulation;
+            line-height: 1;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
         }
 
-        .btn-main:active {
-            background: var(--primary-color);
-            color: #000;
+        #previous-word {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+            height: 20px;
         }
+
+        /* Visualizador de Ondas */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Panel de Control Estilo App Nativa */
+        #controls {
+            background: var(--panel);
+            padding: 20px 20px 40px 20px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-shadow: 0 -5px 20px rgba(255, 0, 0, 0.1);
+            z-index: 30;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .label { font-size: 0.7rem; font-weight: bold; color: #888; letter-spacing: 1px; }
+
+        /* Sliders Personalizados */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 65%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Botón de Encendido */
+        #power-btn {
+            width: 100%;
+            padding: 18px;
+            background: #111;
+            border: 2px solid #333;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-on {
+            border-color: var(--primary) !important;
+            background: rgba(255, 0, 0, 0.1) !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            text-shadow: 0 0 5px var(--primary);
+        }
+
+        /* Historial Flotante */
+        #log {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            text-align: right;
+            font-size: 0.7rem;
+            color: #aaa;
+            pointer-events: none;
+            max-height: 200px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+        .log-item { margin-bottom: 4px; opacity: 0.7; }
+
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>EXPLORACIONES OBR</h1>
-        <div class="subtitle">RADIO SCANNER SYSTEM / AUDIO V2</div>
-    </header>
+    <div id="status-bar">
+        <div id="connection-status">OBR SYSTEM V3</div>
+        <div id="mic-indicator" class="mic-status">MICRÓFONO OFF</div>
+    </div>
 
-    <div id="sensor-debug">ESPERANDO ACTIVACIÓN...</div>
-
-    <div id="visualizer-container">
-        <canvas id="scope"></canvas>
-        <div id="current-word"></div>
-        <div id="log-container"></div>
+    <div id="main-display">
+        <canvas id="visualizer"></canvas>
+        <div id="previous-word"></div>
+        <div id="ghost-word"></div>
+        <div id="log"></div>
     </div>
 
     <div id="controls">
-        <div class="slider-group">
-            <span>SENSIBILIDAD</span>
-            <input type="range" id="sensitivity" min="1" max="100" value="65">
+        <div class="control-row">
+            <span class="label">SENSIBILIDAD</span>
+            <input type="range" id="sens" min="1" max="100" value="65">
         </div>
-        <div class="slider-group">
-            <span>RADIO VOL</span>
-            <input type="range" id="volume" min="0" max="100" value="40">
+        <div class="control-row">
+            <span class="label">VOL RADIO</span>
+            <input type="range" id="vol" min="0" max="100" value="30">
         </div>
-        <button class="btn-main" id="power-btn">ENCENDER RADIO</button>
+        <button id="power-btn">INICIAR SESIÓN</button>
     </div>
 
     <script>
-       // --- DICCIONARIO MAESTRO OBR (VERSIÓN EXTENDIDA) ---
+        // --- DICCIONARIO OBR EXTENDIDO ---
         const dictionary = [
-            // SALUDOS Y BÁSICOS
-            "HOLA", "ADIOS", "SI", "NO", "QUIZAS", "GRACIAS", "YO", "TU", "ELLOS", 
-            "NOSOTROS", "AHORA", "NUNCA", "SIEMPRE", "TARDE", "PRONTO", "ESPERA",
-
-            // ACCIONES (VERBOS)
-            "AYUDA", "CORRE", "VETE", "VEN", "MIRA", "ESCUCHA", "BUSCA", "ENCUENTRA",
-            "SIGUEME", "DETENTE", "CAMINA", "SIENTATE", "LEVANTATE", "CAER", "VOLAR",
-            "REZAR", "GRITAR", "LLORAR", "REIR", "MATAR", "MORIR", "VIVIR", "DORMIR",
-            "DESPERTAR", "ESCONDER", "MOSTRAR", "ROBAR", "ROMPER", "QUEMAR", "AHOGAR",
-            "ENTERRAR", "SALVAR", "PERDER", "GANAR", "JUGAR", "HABLAR", "CALLAR",
-            "TOCAR", "EMPUJAR", "JALAR", "CORTAR", "ATAR", "SOLTAR", "ABRIR", "CERRAR",
-
-            // EMOCIONES Y ESTADOS
-            "MIEDO", "TERROR", "PAZ", "ODIO", "AMOR", "TRISTEZA", "ALEGRIA", "IRA",
-            "DOLOR", "PLACER", "FRIO", "CALOR", "HAMBRE", "SED", "CANSADO", "FUERTE",
-            "DEBIL", "ENFERMO", "SANO", "LOCO", "CUERDO", "SOLO", "ACOMPAÑADO",
-            "CULPA", "VERGUENZA", "INOCENTE", "CULPABLE", "PERDIDO", "ATRAPADO",
-            "LIBRE", "SUCIO", "LIMPIO", "OSCURO", "CLARO", "PESADO", "LIGERO",
-
-            // PERSONAS Y ROLES
-            "MAMA", "PAPA", "HIJO", "HIJA", "HERMANO", "HERMANA", "ABUELO", "ABUELA",
-            "BEBE", "NIÑO", "NIÑA", "HOMBRE", "MUJER", "ANCIANO", "JOVEN", "AMIGO",
-            "ENEMIGO", "ESPOSO", "ESPOSA", "NOVIA", "NOVIO", "FAMILIA", "EXTRAÑO",
-            "DOCTOR", "ENFERMERA", "POLICIA", "SOLDADO", "CURA", "MONJA", "BRUJA",
-            "MAESTRO", "ALUMNO", "VICTIMA", "ASESINO", "LADRON", "VIGILANTE", "JEFE",
-
-            // LUGARES Y ENTORNO
-            "CASA", "HOGAR", "ESCUELA", "HOSPITAL", "IGLESIA", "CEMENTERIO", "TUMBA",
-            "PANTEON", "CALLE", "CAMINO", "CARRETERA", "PUENTE", "TUNEL", "BOSQUE",
-            "MONTE", "DESIERTO", "RIO", "LAGO", "MAR", "POZO", "CUEVA", "SOTANO",
-            "ATICO", "TECHO", "SUELO", "PARED", "PUERTA", "VENTANA", "ESCALERA",
-            "PASILLO", "CUARTO", "BAÑO", "COCINA", "SALA", "JARDIN", "PATIO",
-            "EDIFICIO", "HOTEL", "CARCEL", "GRANJA", "CAMPO", "CIUDAD", "PUEBLO",
-            "CANAL", "VALLE", "PRESA", "LOTE", "RUINAS", "ESQUINA",
-
-            // OBJETOS
-            "CUCHILLO", "ARMA", "PISTOLA", "BALA", "SOGA", "VENENO", "FUEGO", "AGUA",
-            "TIERRA", "AIRE", "PIEDRA", "MADERA", "CRISTAL", "ESPEJO", "RELOJ",
-            "FOTO", "LIBRO", "BIBLIA", "CRUZ", "ROSARIO", "VELA", "LUZ", "LAMPARA",
-            "SILLA", "CAMA", "MESA", "ROPA", "ZAPATOS", "JUGUETE", "MUÑECA", "PELOTA",
-            "DINERO", "ORO", "JOYAS", "ANILLO", "LLAVE", "CANDADO", "CADENA", "COCHE",
-            "CAMION", "RADIO", "TELEFONO", "CARTA", "PAPEL", "PLUMA", "SANGRE", "HUESO",
-
-            // PARANORMAL Y ABSTRACTO
-            "DIOS", "DIABLO", "SATANAS", "DEMONIO", "ANGEL", "ESPIRITU", "FANTASMA",
-            "ALMA", "MENTE", "CUERPO", "VIDA", "MUERTE", "INFIERNO", "CIELO", "PURGATORIO",
-            "LIMBO", "ETERNIDAD", "TIEMPO", "DESTINO", "SUERTE", "MALDICION", "MILAGRO",
-            "MAGIA", "RITUAL", "SACRIFICIO", "OFRENDA", "ALTAR", "SECTA", "CULTO",
-            "MISAS", "ORACION", "PECADOS", "PERDON", "VENGANZA", "JUSTICIA", "VERDAD",
-            "MENTIRA", "SECRETO", "MISTERIO", "SILENCIO", "RUIDO", "VOCES", "SOMBRAS",
-            "LUCES", "PRESENCIA", "ENERGIA", "VIBRACION", "SEÑAL", "MENSAJE",
-
-            // SALUD Y CAUSAS DE MUERTE
-            "ACCIDENTE", "CHOQUE", "CAIDA", "GOLPE", "HERIDA", "CORTE", "DISPARO",
-            "INFARTO", "CANCER", "FIEBRE", "PESTE", "VIRUS", "DOLOR", "ASFIXIA",
-            "SUICIDIO", "HOMICIDIO", "NATURAL", "VEJEZ", "PARTO", "ABORT", "CIRUGIA",
-            "PASTILLAS", "ALCOHOL", "DROGAS", "OVERDOSIS",
-
-            // TIEMPO Y NÚMEROS (Útil para fechas o cantidades)
-            "UNO", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE",
-            "DIEZ", "DOCE", "TREINTA", "CIEN", "MIL", "PRIMERO", "ULTIMO", "LUNES",
-            "VIERNES", "DOMINGO", "ENERO", "DICIEMBRE", "AÑO", "MES", "DIA", "HORA",
-            "MINUTO", "NOCHE", "MADRUGADA", "MAÑANA"
+            "HOLA", "ADIOS", "AYUDA", "AQUI", "FUERA", "MIEDO", "SOLO", "FRIO", "MUERTE", 
+            "CORRE", "ATRAS", "MIRA", "BAJO", "LUZ", "SOMBRA", "DOLOR", "NIÑO", "NIÑA", 
+            "MAMA", "PAPA", "FUEGO", "AGUA", "TIERRA", "AIRE", "ESCUCHA", "VEN", "VETE", 
+            "NOMBRE", "TUMBA", "CRUZ", "DIABLO", "DIOS", "SANTOS", "ROJO", "NEGRO", 
+            "SANGRE", "LLANTO", "GRITO", "PUERTA", "LLAVE", "CERRADO", "ABIERTO", "AYER", 
+            "HOY", "SIEMPRE", "NUNCA", "ASESINO", "VIGILA", "ESCONDIDO", "OBREGON", 
+            "SONORA", "VALLE", "CANAL", "RODEO", "HOTEL", "ESCUELA", "HOSPITAL", 
+            "CEMENTERIO", "ENTERRADO", "AHOGADO", "QUEMADO", "SUICIDIO", "ACCIDENTE",
+            "PRESA", "CARRETERA", "NIÑOS", "JUGAR", "ESCONDITE", "BUSCAR", "ENCONTRAR",
+            "MATAR", "SALVAR", "PERDON", "CULPA", "MENTIRA", "VERDAD", "ORO", "DINERO",
+            "ROBAR", "MALDICION", "BRUJA", "RITUAL", "ALTAR", "OFRENDA", "VOCES"
         ];
-        // Variables de Sistema
-        let isRunning = false;
-        let audioContext, analyser, masterGain;
+
+        // ESTADO DEL SISTEMA
+        let state = {
+            on: false,
+            speaking: false, // ¿El fantasma está hablando?
+            listening: false, // ¿El usuario está hablando?
+            lastTrigger: 0,
+            micLevel: 0,
+            sensorLevel: 0
+        };
+
+        // AUDIO CONTEXT
+        let ac, micNode, micAnalyser, radioNode, radioGain, filterNode, mainGain;
         let canvas, ctx;
-        let lastSpeakTime = 0;
-        
-        // Nodos de Audio para Efectos
-        let noiseNode, sweepLFO, sweepGain, filterNode;
-        
-        // Variables de Sensores Reales
-        let sensorData = { alpha: 0, beta: 0, gamma: 0, accX: 0, accY: 0, accZ: 0 };
-        let lastSensorData = { alpha: 0, beta: 0, gamma: 0 };
 
-        // DOM Elements
-        const powerBtn = document.getElementById('power-btn');
-        const sensitivityInput = document.getElementById('sensitivity');
-        const volumeInput = document.getElementById('volume');
-        const wordDisplay = document.getElementById('current-word');
-        const logContainer = document.getElementById('log-container');
-        const debugPanel = document.getElementById('sensor-debug');
-        const bodyElement = document.body;
+        // ELEMENTOS DOM
+        const els = {
+            btn: document.getElementById('power-btn'),
+            word: document.getElementById('ghost-word'),
+            prev: document.getElementById('previous-word'),
+            micInd: document.getElementById('mic-indicator'),
+            log: document.getElementById('log'),
+            sens: document.getElementById('sens'),
+            vol: document.getElementById('vol')
+        };
 
-        // --- MOTOR DE AUDIO AVANZADO (RADIO AM SIMULATOR) ---
-        function initRadioAudio() {
+        // --- 1. INICIALIZAR SISTEMA DE AUDIO (RADIO + MIC) ---
+        async function initSystem() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioContext = new AudioContext();
+            ac = new AudioContext();
+
+            // CANAL MAESTRO
+            mainGain = ac.createGain();
+            mainGain.connect(ac.destination);
+
+            // CONFIGURAR RADIO (Ruido Rosa + Filtro)
+            setupRadio();
+
+            // CONFIGURAR MICRÓFONO
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                const micSource = ac.createMediaStreamSource(stream);
+                micAnalyser = ac.createAnalyser();
+                micAnalyser.fftSize = 256;
+                micSource.connect(micAnalyser);
+                // NOTA: No conectamos el mic al mainGain para evitar feedback (eco infinito)
+            } catch (e) {
+                console.error("Mic Error:", e);
+                els.micInd.innerText = "MIC ERROR (Permisos?)";
+                els.micInd.style.color = "red";
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        function setupRadio() {
+            // Generador de Ruido
+            const bufferSize = 2 * ac.sampleRate;
+            const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
+            const data = buffer.getChannelData(0);
             
-            // 1. Nodo Maestro de Volumen
-            masterGain = audioContext.createGain();
-            masterGain.gain.value = volumeInput.value / 100;
-            masterGain.connect(audioContext.destination);
-
-            // 2. Analizador (Para el visualizador)
-            analyser = audioContext.createAnalyser();
-            analyser.fftSize = 2048;
-            masterGain.connect(analyser); // Conectar salida al analizador
-
-            // 3. Generador de Ruido Rosa (Base de estática)
-            const bufferSize = 2 * audioContext.sampleRate;
-            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-            const output = noiseBuffer.getChannelData(0);
+            // Ruido Brown/Pink para sonar más grave
+            let lastOut = 0;
             for (let i = 0; i < bufferSize; i++) {
-                // Algoritmo de ruido rosa aproximado
                 const white = Math.random() * 2 - 1;
-                output[i] = (lastOut + (0.02 * white)) / 1.02;
-                lastOut = output[i];
-                output[i] *= 3.5; // Compensar ganancia
+                data[i] = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = data[i];
+                data[i] *= 3.5; 
             }
-            noiseNode = audioContext.createBufferSource();
-            noiseNode.buffer = noiseBuffer;
-            noiseNode.loop = true;
 
-            // 4. Filtro de Paso de Banda (Simula el dial de la radio)
-            filterNode = audioContext.createBiquadFilter();
+            radioNode = ac.createBufferSource();
+            radioNode.buffer = buffer;
+            radioNode.loop = true;
+
+            // Filtro de banda (Efecto Radio Vieja)
+            filterNode = ac.createBiquadFilter();
             filterNode.type = 'bandpass';
-            filterNode.Q.value = 2; // Ancho de banda
             filterNode.frequency.value = 1000;
+            filterNode.Q.value = 1;
 
-            // 5. LFO de Barrido (El "Fantasma" moviendo la perilla)
-            // Esto hace que el sonido suba y baje "wooosh... wooosh..."
-            sweepLFO = audioContext.createOscillator();
-            sweepLFO.type = 'sine';
-            sweepLFO.frequency.value = 0.5; // Velocidad del barrido (0.5 Hz)
+            radioGain = ac.createGain();
+            radioGain.gain.value = els.vol.value / 100;
+
+            radioNode.connect(filterNode);
+            filterNode.connect(radioGain);
+            radioGain.connect(mainGain);
             
-            sweepGain = audioContext.createGain();
-            sweepGain.gain.value = 800; // Cuánto se mueve la perilla (Hz)
-
-            // CONEXIONES
-            // LFO -> SweepGain -> Frecuencia del Filtro
-            sweepLFO.connect(sweepGain);
-            sweepGain.connect(filterNode.frequency);
-
-            // Ruido -> Filtro -> Master
-            noiseNode.connect(filterNode);
-            filterNode.connect(masterGain);
-
-            // INICIAR
-            noiseNode.start(0);
-            sweepLFO.start(0);
-
-            // Iniciar bucle de interferencias aleatorias
-            scheduleInterference();
-        }
-
-        let lastOut = 0;
-
-        // --- GENERADOR DE "RECHINIDOS" (INTERFERENCIAS) ---
-        function playRadioInterference() {
-            if (!isRunning) return;
-
-            // Crear oscilador para el "pitido"
-            const osc = audioContext.createOscillator();
-            const gain = audioContext.createGain();
+            radioNode.start(0);
             
-            // Tipos de onda: Sawtooth o Sine suenan más a radio rota
-            osc.type = Math.random() > 0.5 ? 'sine' : 'sawtooth';
+            // LFO para el barrido de radio automático
+            setInterval(() => {
+                if(!state.on) return;
+                // Mueve la frecuencia del filtro aleatoriamente para simular sintonización
+                const freq = 800 + Math.random() * 600;
+                filterNode.frequency.setTargetAtTime(freq, ac.currentTime, 0.2);
+            }, 500);
+        }
+
+        // --- 2. SISTEMA DE RESPUESTA INTELIGENTE ---
+        function triggerResponse() {
+            if (state.speaking) return; // No hablar encima de sí mismo
+
+            const word = dictionary[Math.floor(Math.random() * dictionary.length)];
+            state.speaking = true;
+
+            // VISUALES
+            els.prev.innerText = els.word.innerText;
+            els.word.innerText = word;
+            els.word.style.opacity = 1;
+            els.word.style.transform = "scale(1.1)";
             
-            // Frecuencia aleatoria aguda (1000Hz - 4000Hz)
-            const freq = 1000 + Math.random() * 3000;
-            osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+            // LOG
+            const item = document.createElement('div');
+            item.className = 'log-item';
+            item.innerText = word;
+            els.log.prepend(item);
+
+            // AUDIO DUCKING (Bajar volumen radio)
+            const currentVol = els.vol.value / 100;
+            radioGain.gain.setTargetAtTime(0.05, ac.currentTime, 0.1); // Baja rápido
+
+            // HABLAR (TTS)
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'es-MX';
+            u.rate = 0.9;
+            u.pitch = 0.7; // Tono fantasmal
+            u.volume = 1.0; // Volumen máximo
+
+            u.onend = () => {
+                state.speaking = false;
+                // Subir volumen radio suavemente
+                radioGain.gain.setTargetAtTime(currentVol, ac.currentTime, 1.5);
+                setTimeout(() => {
+                    els.word.style.opacity = 0;
+                    els.word.style.transform = "scale(0.9)";
+                }, 1000);
+            };
+
+            window.speechSynthesis.speak(u);
             
-            // Efecto de caída de tono (Doppler/Sintonización rápida)
-            if (Math.random() > 0.3) {
-                osc.frequency.exponentialRampToValueAtTime(freq / 2, audioContext.currentTime + 0.2);
-            }
-
-            // Volumen
-            gain.gain.setValueAtTime(0.05, audioContext.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
-
-            // Conectar y disparar
-            osc.connect(gain);
-            gain.connect(masterGain);
-
-            osc.start();
-            osc.stop(audioContext.currentTime + 0.25);
+            // Flash de color
+            document.body.style.backgroundColor = "#220000";
+            setTimeout(() => document.body.style.backgroundColor = "var(--bg)", 100);
         }
 
-        // Programador de sonidos aleatorios
-        function scheduleInterference() {
-            if (!isRunning) return;
-            const timeToNext = 500 + Math.random() * 2000; // Cada 0.5 a 2.5 segundos
-            setTimeout(() => {
-                playRadioInterference();
-                scheduleInterference();
-            }, timeToNext);
-        }
-
-        // --- MANEJO DE SENSORES Y PERMISOS ---
-        async function requestPermissions() {
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    return permission === 'granted';
-                } catch (e) { return false; }
-            }
-            return true;
-        }
-
-        function startSensors() {
-            window.addEventListener('deviceorientation', e => {
-                sensorData.alpha = e.alpha || 0;
-                sensorData.beta = e.beta || 0;
-                sensorData.gamma = e.gamma || 0;
-            });
-            window.addEventListener('devicemotion', e => {
-                sensorData.accX = e.accelerationIncludingGravity.x || 0;
-                sensorData.accY = e.accelerationIncludingGravity.y || 0;
-            });
-            
-            setTimeout(() => {
-                const orient = sensorData.alpha !== 0 || sensorData.beta !== 0;
-                debugPanel.innerHTML = orient 
-                    ? "SISTEMA ACTIVO: <span class='status-ok'>SENSOR MAGNÉTICO OK</span>" 
-                    : "SISTEMA ACTIVO: <span class='status-err'>SIMULACIÓN (SENSOR BLOQUEADO)</span>";
-            }, 1000);
-        }
-
-        // --- TEXT TO SPEECH ---
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'es-MX';
-                utterance.pitch = 0.6; // Voz más grave y fantasmagórica
-                utterance.rate = 0.85;
-                
-                wordDisplay.innerText = text;
-                wordDisplay.style.opacity = 1;
-                
-                const p = document.createElement('div');
-                p.className = 'log-entry';
-                p.innerText = `> ${text}`;
-                logContainer.prepend(p);
-
-                window.speechSynthesis.speak(utterance);
-                setTimeout(() => { wordDisplay.style.opacity = 0; }, 3000);
-            }
-        }
-
-        function triggerFlash() {
-            bodyElement.style.backgroundColor = '#400000'; // Flash Rojo Oscuro
-            setTimeout(() => bodyElement.style.backgroundColor = 'var(--bg-color)', 150);
-        }
-
-        // --- LOOP PRINCIPAL ---
+        // --- 3. BUCLE PRINCIPAL (CEREBRO DE LA APP) ---
         function loop() {
-            if (!isRunning) return;
+            if (!state.on) return;
             requestAnimationFrame(loop);
 
-            // 1. Detectar cambios en sensores
-            let delta = Math.abs(sensorData.alpha - lastSensorData.alpha) +
-                        Math.abs(sensorData.beta - lastSensorData.beta) +
-                        Math.abs(sensorData.gamma - lastSensorData.gamma);
-
-            if (delta < 0.2) delta = 0; // Filtrar ruido base
-
-            // 2. Calcular probabilidad de disparo
-            // Si hay movimiento brusco o magnetismo, delta sube.
-            // Si delta sube, aumentamos la frecuencia del "Barrido" de radio para simular tensión
-            if (delta > 2 && sweepLFO) {
-                sweepLFO.frequency.value = 2.0; // Radio busca rápido
-            } else if (sweepLFO) {
-                sweepLFO.frequency.value = 0.5; // Radio busca lento
+            // A. ANALIZAR MICRÓFONO
+            let micLevel = 0;
+            if (micAnalyser) {
+                const arr = new Uint8Array(micAnalyser.frequencyBinCount);
+                micAnalyser.getByteTimeDomainData(arr);
+                let sum = 0;
+                for(let i=0; i<arr.length; i++) sum += Math.abs(arr[i] - 128);
+                micLevel = sum / arr.length;
             }
 
-            lastSensorData = { ...sensorData };
-
-            // Umbral de disparo
-            const sensValue = parseInt(sensitivityInput.value);
-            const triggerThreshold = 102 - sensValue; 
-            const randomFactor = Math.random() * 2; 
-            
-            const now = Date.now();
-
-            if ((delta + randomFactor) > triggerThreshold && (now - lastSpeakTime > 3000)) {
-                triggerFlash();
-                const word = dictionary[Math.floor(Math.random() * dictionary.length)];
-                
-                // Efecto: Bajar volumen de radio al hablar
-                if(masterGain) {
-                    masterGain.gain.setValueAtTime(masterGain.gain.value, audioContext.currentTime);
-                    masterGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.1);
-                    masterGain.gain.linearRampToValueAtTime(volumeInput.value/100, audioContext.currentTime + 1.5);
+            // Lógica de "ESCUCHANDO"
+            const micThreshold = 2; // Umbral de ruido
+            if (micLevel > micThreshold) {
+                // Usuario está hablando
+                state.listening = true;
+                els.micInd.innerText = "ESCUCHANDO...";
+                els.micInd.className = "mic-status mic-active";
+            } else {
+                // Silencio detectado
+                if (state.listening) {
+                    // El usuario ACABA de dejar de hablar. MOMENTO CLAVE.
+                    // Aumentamos probabilidad de respuesta (Sincronicidad artificial)
+                    state.listening = false;
+                    els.micInd.innerText = "PROCESANDO...";
+                    els.micInd.className = "mic-status ghost-active";
+                    
+                    // Forzar respuesta con alta probabilidad en los próximos 2 segundos
+                    setTimeout(() => {
+                        if(Math.random() > 0.3) triggerResponse(); // 70% chance de responder
+                        els.micInd.innerText = "ESPERANDO PREGUNTA";
+                        els.micInd.className = "mic-status";
+                    }, 500 + Math.random() * 1000); // Retraso humano (0.5s - 1.5s)
                 }
-                
-                speak(word);
-                lastSpeakTime = now;
             }
 
-            drawScope();
+            // B. DISPARO POR SENSOR ALEATORIO (Relleno de fondo)
+            // Si nadie habla, a veces el fantasma dice algo random basado en "sensores" simulados
+            const sens = parseInt(els.sens.value);
+            const threshold = 1 - (sens * 0.00005); // Muy difícil
+            if (Math.random() > threshold && !state.speaking && !state.listening) {
+                triggerResponse();
+            }
+
+            // C. ACTUALIZAR VOLUMEN RADIO EN TIEMPO REAL
+            if (!state.speaking) {
+                radioGain.gain.setTargetAtTime(els.vol.value / 100, ac.currentTime, 0.1);
+            }
+
+            // D. DIBUJAR VISUALIZADOR
+            drawVisualizer(micLevel);
         }
 
-        function drawScope() {
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteTimeDomainData(dataArray);
-
-            ctx.fillStyle = 'rgba(5, 5, 5, 1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#ff0000';
-            ctx.beginPath();
-
-            const sliceWidth = canvas.width * 1.0 / bufferLength;
-            let x = 0;
-            for(let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = v * canvas.height / 2;
-                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                x += sliceWidth;
+        function drawVisualizer(micInput) {
+            if (!ctx) {
+                canvas = document.getElementById('visualizer');
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                ctx = canvas.getContext('2d');
             }
-            ctx.lineTo(canvas.width, canvas.height/2);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            
+            // Dibujar Onda
+            // Si el usuario habla = Verde. Si es ruido = Gris. Si habla fantasma = Rojo.
+            if (state.speaking) ctx.strokeStyle = "#ff0000";
+            else if (state.listening) ctx.strokeStyle = "#00ff00";
+            else ctx.strokeStyle = "#333";
+
+            ctx.beginPath();
+            const cy = canvas.height / 2;
+            
+            // Amplitud base + input micrófono
+            const amp = 20 + (micInput * 10); 
+            
+            ctx.moveTo(0, cy);
+            for (let i = 0; i < canvas.width; i++) {
+                // Seno complejo para simular onda de audio
+                const y = cy + Math.sin(i * 0.05 + Date.now() * 0.01) * Math.sin(i * 0.01) * amp;
+                ctx.lineTo(i, y);
+            }
             ctx.stroke();
         }
 
-        // --- CONTROLES ---
-        volumeInput.addEventListener('input', (e) => {
-            if(masterGain) masterGain.gain.value = e.target.value / 100;
-        });
-
-        powerBtn.addEventListener('click', async () => {
-            if (!isRunning) {
-                const granted = await requestPermissions();
-                if(granted) {
-                    if (!audioContext) initRadioAudio();
-                    if (audioContext.state === 'suspended') audioContext.resume();
-                    
-                    startSensors();
-                    isRunning = true;
-                    powerBtn.innerText = "APAGAR RADIO";
-                    powerBtn.style.color = "#fff";
-                    powerBtn.style.borderColor = "#fff";
-                    
-                    canvas = document.getElementById('scope');
-                    ctx = canvas.getContext('2d');
-                    canvas.width = document.getElementById('visualizer-container').offsetWidth;
-                    canvas.height = document.getElementById('visualizer-container').offsetHeight;
-                    
-                    loop();
-                }
+        // --- CONTROLADORES ---
+        els.btn.addEventListener('click', async () => {
+            if (!state.on) {
+                await initSystem();
+                if(ac.state === 'suspended') ac.resume();
+                
+                state.on = true;
+                els.btn.innerText = "DETENER";
+                els.btn.classList.add("btn-on");
+                els.micInd.innerText = "INICIANDO...";
             } else {
-                isRunning = false;
-                powerBtn.innerText = "ENCENDER RADIO";
-                powerBtn.style.color = "var(--primary-color)";
-                powerBtn.style.borderColor = "var(--primary-color)";
+                state.on = false;
+                ac.close();
+                els.btn.innerText = "INICIAR SESIÓN";
+                els.btn.classList.remove("btn-on");
+                els.micInd.innerText = "MICRÓFONO OFF";
+                els.micInd.className = "mic-status";
                 window.speechSynthesis.cancel();
-                if(audioContext) audioContext.close();
-                audioContext = null;
-                debugPanel.innerText = "SISTEMA OFF";
             }
         });
 
-        window.addEventListener('resize', () => {
-            if(canvas) {
-                canvas.width = document.getElementById('visualizer-container').offsetWidth;
-                canvas.height = document.getElementById('visualizer-container').offsetHeight;
-            }
-        });
     </script>
 </body>
 </html>
