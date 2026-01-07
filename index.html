@@ -6,11 +6,11 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>VOX OBR - SENTENCE MODE</title>
+    <title>VOX OBR - STABLE V5</title>
     <style>
         :root {
-            --primary: #FFD700; /* Amarillo Viral del Video */
-            --bg-overlay: rgba(0, 0, 0, 0.3);
+            --primary: #FFD700; /* Amarillo Viral */
+            --shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,7 +18,7 @@
         body {
             background-color: #000;
             color: #fff;
-            font-family: 'Arial Black', 'Helvetica Neue', sans-serif; /* Fuente más gruesa */
+            font-family: 'Arial Black', sans-serif;
             margin: 0;
             height: 100dvh;
             overflow: hidden;
@@ -26,7 +26,7 @@
             flex-direction: column;
         }
 
-        /* VIDEO DE FONDO */
+        /* FONDO CÁMARA */
         #camera-feed {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -34,15 +34,15 @@
             z-index: -1;
         }
 
-        /* HUD */
+        /* CAPA SUPERIOR (HUD) */
         #hud-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.8) 100%);
             z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.8) 100%);
         }
 
         .top-bar {
@@ -51,16 +51,13 @@
             justify-content: space-between;
             font-size: 0.9rem;
             text-shadow: 1px 1px 2px #000;
+            font-weight: bold;
         }
 
-        .rec-indicator {
-            color: red;
-            font-weight: bold;
-            animation: blink 1.5s infinite;
-        }
+        .rec-dot { color: red; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* VISUALIZADOR Y TEXTO */
+        /* ZONA CENTRAL */
         .center-display {
             flex: 1;
             display: flex;
@@ -68,68 +65,62 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+            padding: 20px;
         }
 
         canvas {
             width: 100%;
-            height: 120px;
-            opacity: 0.8;
-            /* Filtro para que la onda se vea brillante */
-            filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.8));
+            height: 100px;
+            filter: drop-shadow(0 0 5px #000);
+            opacity: 0.9;
+            margin-bottom: 20px;
         }
 
         #ghost-word {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             font-weight: 900;
             text-align: center;
-            color: var(--primary); /* Amarillo */
-            /* Borde negro fuerte para leerse sobre cualquier fondo */
-            text-shadow: 
-                3px 3px 0 #000,
-                -1px -1px 0 #000,  
-                1px -1px 0 #000,
-                -1px 1px 0 #000,
-                1px 1px 0 #000;
+            color: var(--primary);
+            text-shadow: var(--shadow);
             text-transform: uppercase;
             line-height: 1.1;
-            max-width: 90%;
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 20px;
+            opacity: 0; /* Invisible por defecto */
+            transform: scale(0.9);
+            transition: opacity 0.3s ease-in, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 10px;
+            background: rgba(0,0,0,0.4); /* Fondo sutil para leer mejor */
+            border-radius: 10px;
         }
 
         /* CONTROLES */
         .controls {
             padding: 30px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #log {
-            width: 100%;
-            height: 60px;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.7);
-            text-align: center;
-            overflow: hidden;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px 1px #000;
+            justify-content: center;
         }
 
         #power-btn {
-            background: rgba(255, 0, 0, 0.7);
-            border: 2px solid #fff;
+            background: rgba(200, 0, 0, 0.8);
+            border: 3px solid #fff;
             color: white;
             padding: 15px 40px;
             font-size: 1.2rem;
             border-radius: 50px;
             font-weight: bold;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            text-transform: uppercase;
         }
 
+        #status-log {
+            position: absolute;
+            bottom: 100px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #aaa;
+            text-shadow: 1px 1px 1px #000;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -138,8 +129,8 @@
 
     <div id="hud-layer">
         <div class="top-bar">
-            <div>OBR INTELLIGENT V4</div>
-            <div class="rec-indicator">● REC</div>
+            <div>OBR SYSTEM V5</div>
+            <div><span class="rec-dot">●</span> REC</div>
         </div>
 
         <div class="center-display">
@@ -147,206 +138,218 @@
             <div id="ghost-word"></div>
         </div>
 
+        <div id="status-log">ESPERANDO ACTIVACIÓN...</div>
+
         <div class="controls">
-            <div id="log"></div> <button id="power-btn">INICIAR SISTEMA</button>
+            <button id="power-btn">INICIAR SESIÓN</button>
         </div>
     </div>
 
     <script>
-        // --- BASE DE DATOS OBR ---
+        // --- BASE DE DATOS DE FRASES ---
+        const phrases = [
+            "NO SE ASUSTEN", "ESTOY AQUI", "ME AHOGUE", "AYUDA POR FAVOR",
+            "MIRA ATRAS", "HACE FRIO", "DONDE ESTAN", "NO ME VEO",
+            "BUSCO A MAMA", "FUE ACCIDENTE", "EN EL CANAL", "BAJO EL AGUA",
+            "SOY EL NIÑO", "QUIERO JUGAR", "NO TE VAYAS", "ESTA OSCURO",
+            "HOLA AMIGOS", "ESTOY SOLO", "TENGO MIEDO", "YA VOY",
+            "NO PUEDO", "SAL DE AQUI", "ELLOS VIENEN", "ESCUCHAME"
+        ];
         
-        // 1. Palabras sueltas (70% chance)
-        const simpleWords = [
-            "SI", "NO", "AQUI", "FUERA", "MAMA", "PAPA", "AGUA", "FUEGO", "RIO", "CANAL",
-            "SOLO", "FRIO", "MIEDO", "AYUDA", "CORRE", "ATRAS", "MIRA", "BAJO", "LUZ",
-            "CRUZ", "DIOS", "ROJO", "NEGRO", "SANGRE", "NIÑO", "NIÑA", "NOMBRE", "TUMBA",
-            "LLAVE", "PUERTA", "MUERTO", "VIVO", "AYER", "HOY", "JUEGO", "ESCUELA"
+        const words = [
+            "SI", "NO", "MAMA", "PAPA", "AGUA", "FUEGO", "LUZ", "ROJO",
+            "CRUZ", "DIOS", "CORRE", "ATRAS", "MIRA", "BAJO", "SOLO",
+            "NIÑO", "NIÑA", "TUMBA", "MUERTE", "DOLOR", "GRITO", "LLANTO"
         ];
 
-        // 2. Frases Inteligentes (30% chance - Estilo Video)
-        const smartPhrases = [
-            "NO SE ASUSTEN",
-            "ME AHOGUÉ",
-            "ESTOY AQUÍ",
-            "NO ME VEO",
-            "BUSCO A MAMÁ",
-            "FUE UN ACCIDENTE",
-            "AYUDA POR FAVOR",
-            "HACE MUCHO FRÍO",
-            "EN EL CANAL",
-            "SOY EL NIÑO",
-            "QUIERO IRME",
-            "ESTOY ATRAPADO",
-            "MIRA ATRÁS",
-            "NO TE VAYAS",
-            "ESTOY TRISTE",
-            "YA ESTOY MUERTO",
-            "BAJO EL PUENTE",
-            "NO PUEDO SALIR",
-            "ESCUCHA MI VOZ",
-            "ELLOS VIENEN"
-        ];
-
-        let isRunning = false;
-        let ac, mic, analyser, radioNode, radioGain;
-        let canvas, ctx;
-        
-        const els = {
-            video: document.getElementById('camera-feed'),
-            word: document.getElementById('ghost-word'),
-            log: document.getElementById('log'),
-            btn: document.getElementById('power-btn'),
-            canvas: document.getElementById('scope')
+        // VARIABLES DE ESTADO
+        let state = {
+            active: false,
+            speaking: false, // BLOQUEO CLAVE: Impide que se corte la voz
+            audioCtx: null,
+            radioGain: null
         };
 
-        async function start() {
+        const els = {
+            btn: document.getElementById('power-btn'),
+            word: document.getElementById('ghost-word'),
+            video: document.getElementById('camera-feed'),
+            canvas: document.getElementById('scope'),
+            log: document.getElementById('status-log')
+        };
+
+        // --- INICIO DEL SISTEMA ---
+        els.btn.addEventListener('click', async () => {
+            if (state.active) return; // Ya está activo
+            
             try {
-                // Pedir permisos de Camara y Micrófono
+                // 1. Desbloquear Audio del Navegador (Truco iOS)
+                unlockAudio();
+
+                // 2. Pedir Permisos
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'environment' }, 
                     audio: true 
                 });
                 els.video.srcObject = stream;
 
-                // Iniciar Audio
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                ac = new AudioContext();
+                // 3. Iniciar Motor de Audio
+                initAudioEngine(stream);
+
+                // 4. UI
+                state.active = true;
+                els.btn.style.display = 'none'; // Ocultar botón
+                els.log.innerText = "ESCUCHANDO ENTORNO...";
                 
-                // Micrófono para visualizador
-                mic = ac.createMediaStreamSource(stream);
-                analyser = ac.createAnalyser();
-                analyser.fftSize = 512;
-                mic.connect(analyser);
-
-                // Radio de fondo (Spirit Box)
-                setupRadio();
-
-                // Loop Visual
+                // 5. Iniciar Cerebro (Loop)
                 loopGraphics();
-
-                // Loop Lógico (Cerebro)
-                setInterval(brainLoop, 200);
-
-                isRunning = true;
-                els.btn.style.display = 'none'; // Ocultar botón al iniciar para limpiar pantalla
+                setInterval(brainLoop, 500); // Revisar cada 0.5s
 
             } catch (e) {
-                alert("Error: Se requieren permisos de cámara y micrófono.");
+                alert("ERROR: Necesitas dar permisos de cámara y micrófono.");
+                console.error(e);
             }
-        }
+        });
 
-        function setupRadio() {
-            // Ruido blanco
-            const bufferSize = 2 * ac.sampleRate;
-            const buffer = ac.createBuffer(1, bufferSize, ac.sampleRate);
-            const data = buffer.getChannelData(0);
-            for(let i=0; i<bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-            radioNode = ac.createBufferSource();
-            radioNode.buffer = buffer;
-            radioNode.loop = true;
-
-            // Filtro estilo radio AM
-            const filter = ac.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.value = 900;
-
-            radioGain = ac.createGain();
-            radioGain.gain.value = 0.05; // Volumen bajo
-
-            radioNode.connect(filter);
-            filter.connect(radioGain);
-            radioGain.connect(ac.destination);
-            radioNode.start();
-        }
-
-        // --- CEREBRO OBR ---
-        let lastTrigger = 0;
-
-        function brainLoop() {
-            if(!isRunning) return;
-
-            // Simulación de "Escucha Activa"
-            // En una app real, aquí analizaríamos picos de EMF o Audio.
-            // Aquí usamos una probabilidad ajustada para que no hable demasiado (spam)
-            // pero tampoco se quede callada.
-            
-            const now = Date.now();
-            const timeSinceLast = now - lastTrigger;
-            
-            // Probabilidad base baja (1%) cada 200ms
-            let probability = 0.01; 
-
-            // Si ha pasado mucho tiempo (10 seg) sin hablar, sube probabilidad
-            if (timeSinceLast > 10000) probability = 0.05;
-
-            if (Math.random() < probability && timeSinceLast > 3000) {
-                triggerVoice();
-                lastTrigger = now;
-            }
-        }
-
-        function triggerVoice() {
-            // DECISIÓN INTELIGENTE: ¿Palabra o Frase?
-            const isPhrase = Math.random() > 0.6; // 40% chance de frase compleja
-            
-            let text = "";
-            if (isPhrase) {
-                text = smartPhrases[Math.floor(Math.random() * smartPhrases.length)];
-            } else {
-                text = simpleWords[Math.floor(Math.random() * simpleWords.length)];
-            }
-
-            // Mostrar visualmente (Estilo Video: Guión antes del texto)
-            const displayText = "-" + text;
-            els.word.innerText = displayText;
-            els.word.style.opacity = 1;
-            els.word.style.transform = "scale(1.1)";
-
-            // Añadir al log (historial)
-            const logItem = document.createElement('div');
-            logItem.innerText = displayText;
-            els.log.prepend(logItem);
-
-            // Audio Ducking (Bajar radio)
-            const prevVol = radioGain.gain.value;
-            radioGain.gain.linearRampToValueAtTime(0.01, ac.currentTime + 0.1);
-
-            // Hablar
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'es-MX';
-            u.rate = 0.85; // Un poco lento
-            u.pitch = isPhrase ? 0.6 : 0.8; // Frases más graves/serias
-            u.onend = () => {
-                // Subir radio de nuevo
-                radioGain.gain.linearRampToValueAtTime(prevVol, ac.currentTime + 1);
-                // Ocultar texto
-                setTimeout(() => {
-                    els.word.style.opacity = 0;
-                    els.word.style.transform = "scale(0.8)";
-                }, 2000);
-            };
+        // Truco para iOS: Reproducir silencio al tocar botón para habilitar TTS
+        function unlockAudio() {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance("Sistema activo");
+            u.volume = 0; // Silencio
             window.speechSynthesis.speak(u);
         }
 
-        // --- GRÁFICOS ---
-        function loopGraphics() {
-            if(!isRunning) return;
-            requestAnimationFrame(loopGraphics);
+        function initAudioEngine(stream) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            state.audioCtx = new AudioContext();
 
-            if(!ctx) {
+            // Micrófono (Visualizador)
+            const mic = state.audioCtx.createMediaStreamSource(stream);
+            state.analyser = state.audioCtx.createAnalyser();
+            state.analyser.fftSize = 256;
+            mic.connect(state.analyser);
+
+            // Radio Fantasma (Ruido de Fondo)
+            const bufferSize = 2 * state.audioCtx.sampleRate;
+            const buffer = state.audioCtx.createBuffer(1, bufferSize, state.audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const radioSrc = state.audioCtx.createBufferSource();
+            radioSrc.buffer = buffer;
+            radioSrc.loop = true;
+
+            const filter = state.audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 850;
+
+            state.radioGain = state.audioCtx.createGain();
+            state.radioGain.gain.value = 0.04; // Volumen base suave
+
+            radioSrc.connect(filter);
+            filter.connect(state.radioGain);
+            state.radioGain.connect(state.audioCtx.destination);
+            radioSrc.start();
+        }
+
+        // --- CEREBRO INTELIGENTE ---
+        function brainLoop() {
+            if (!state.active) return;
+            
+            // SI YA ESTÁ HABLANDO, NO HACER NADA (Evita cortes)
+            if (state.speaking) return;
+
+            // Probabilidad de disparo
+            // Simulamos que detecta algo. Ajustar 0.05 para más/menos frecuencia.
+            if (Math.random() < 0.06) {
+                triggerEntity();
+            }
+        }
+
+        function triggerEntity() {
+            // BLOQUEAR SISTEMA
+            state.speaking = true;
+
+            // Elegir texto
+            const usePhrase = Math.random() > 0.5; // 50% frase, 50% palabra
+            const text = usePhrase 
+                ? phrases[Math.floor(Math.random() * phrases.length)]
+                : words[Math.floor(Math.random() * words.length)];
+
+            const displayText = "-" + text; // Estilo OBR
+
+            // 1. MOSTRAR EN PANTALLA
+            els.word.innerText = displayText;
+            els.word.style.opacity = 1;
+            els.word.style.transform = "scale(1.0)";
+            els.log.innerText = "DTECTADO: " + text;
+
+            // 2. BAJAR VOLUMEN RADIO (Ducking)
+            const now = state.audioCtx.currentTime;
+            state.radioGain.gain.setValueAtTime(state.radioGain.gain.value, now);
+            state.radioGain.gain.linearRampToValueAtTime(0.001, now + 0.2); // Casi silencio
+
+            // 3. PREPARAR VOZ
+            window.speechSynthesis.cancel(); // Asegurar limpieza
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-MX';
+            utterance.rate = 0.9; // Velocidad normal
+            utterance.pitch = 0.7; // Tono un poco grave
+            utterance.volume = 1.0;
+
+            // 4. EVENTO: AL TERMINAR DE HABLAR
+            utterance.onend = () => {
+                finishSpeaking();
+            };
+
+            // Seguro contra fallos (si onend no dispara, forzar limpieza a los 4s)
+            setTimeout(() => {
+                if (state.speaking) finishSpeaking();
+            }, 4000);
+
+            // 5. HABLAR
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function finishSpeaking() {
+            // Restaurar volumen radio
+            if(state.audioCtx) {
+                const now = state.audioCtx.currentTime;
+                state.radioGain.gain.cancelScheduledValues(now);
+                state.radioGain.gain.linearRampToValueAtTime(0.04, now + 1);
+            }
+
+            // Ocultar texto limpiamente
+            els.word.style.opacity = 0;
+            els.word.style.transform = "scale(0.9)";
+            
+            // Liberar bloqueo después de un breve respiro
+            setTimeout(() => {
+                state.speaking = false;
+                els.log.innerText = "ESCUCHANDO ENTORNO...";
+            }, 500);
+        }
+
+        // --- GRÁFICOS (VISUALIZADOR) ---
+        let ctx = null;
+        function loopGraphics() {
+            requestAnimationFrame(loopGraphics);
+            if (!state.active) return;
+
+            if (!ctx) {
                 els.canvas.width = els.canvas.offsetWidth;
                 els.canvas.height = els.canvas.offsetHeight;
                 ctx = els.canvas.getContext('2d');
             }
 
-            const bufferLength = analyser.frequencyBinCount;
+            const bufferLength = state.analyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteTimeDomainData(dataArray);
+            state.analyser.getByteTimeDomainData(dataArray);
 
             ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#00FF00'; // Verde brillante
+            ctx.lineWidth = 3;
+            // Verde si escucha, Rojo si habla la entidad
+            ctx.strokeStyle = state.speaking ? '#FFD700' : '#00FF00'; 
             ctx.beginPath();
 
             const sliceWidth = els.canvas.width * 1.0 / bufferLength;
@@ -354,19 +357,12 @@
 
             for(let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
-                // Exagerar el movimiento para que se vea genial en video
-                const y = (v * els.canvas.height / 2) + ((v-1)*20); 
-
-                if(i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-
+                const y = v * els.canvas.height / 2;
+                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 x += sliceWidth;
             }
             ctx.stroke();
         }
-
-        els.btn.addEventListener('click', start);
-
     </script>
 </body>
 </html>
