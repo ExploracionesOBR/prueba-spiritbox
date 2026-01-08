@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <title>ENTE OBR - V2</title>
+    <title>ENTE OBR - V3 AUTO</title>
     <style>
         :root {
-            --primary: #ff3333; /* Rojo sangre para esta versión */
-            --dim: #441111;
+            --primary: #ff3333; /* Rojo Sangre */
+            --active: #00ff00;  /* Verde Actividad */
         }
 
         body {
@@ -29,7 +29,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
             z-index: -1;
-            filter: grayscale(100%) contrast(1.3) brightness(0.7);
+            filter: grayscale(100%) contrast(1.2) brightness(0.6);
         }
 
         /* HUD */
@@ -47,10 +47,10 @@
             display: flex;
             justify-content: space-between;
             font-weight: bold;
-            text-shadow: 1px 1px 5px black;
+            text-shadow: 2px 2px 0 #000;
         }
 
-        /* VISUALIZADOR DE VOZ */
+        /* VISUALIZADOR */
         #voice-display {
             flex: 1;
             display: flex;
@@ -61,24 +61,32 @@
         }
 
         #ghost-text {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 900;
             color: #fff;
-            text-shadow: 0 0 10px var(--primary), 2px 2px 0 #000;
+            text-shadow: 0 0 15px var(--primary), 2px 2px 0 #000;
             text-transform: uppercase;
             max-width: 90%;
-            min-height: 3rem;
             opacity: 0;
             transition: opacity 0.3s;
         }
 
         #status-indicator {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 0.7rem;
-            color: #aaa;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 4px;
+            color: #ccc;
+            background: rgba(0,0,0,0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        #idle-timer-bar {
+            width: 0%;
+            height: 2px;
+            background: var(--active);
+            margin-top: 5px;
+            transition: width 1s linear;
         }
 
         /* CONTROLES */
@@ -94,15 +102,14 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.8);
             padding: 10px 20px;
             border-radius: 20px;
-            border: 1px solid #333;
+            border: 1px solid #444;
         }
 
         .switch-label { font-size: 0.8rem; color: #fff; font-weight: bold; }
 
-        /* Toggle CSS puro */
         .toggle-switch {
             position: relative;
             width: 50px;
@@ -132,19 +139,19 @@
         input:checked + .slider:before { transform: translateX(24px); }
 
         #manual-btn {
-            background: rgba(50, 0, 0, 0.8);
+            background: rgba(50, 0, 0, 0.9);
             color: white;
             border: 2px solid var(--primary);
-            padding: 15px 40px;
+            padding: 18px 40px;
             font-size: 1rem;
             font-weight: bold;
             border-radius: 50px;
-            box-shadow: 0 0 15px rgba(255,0,0,0.3);
+            box-shadow: 0 0 20px rgba(255,0,0,0.4);
             text-transform: uppercase;
         }
         #manual-btn:active { background: var(--primary); color: black; }
 
-        /* Animación de Glitch para texto */
+        /* GLITCH */
         .glitch-effect {
             animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
             color: #ffaaaa;
@@ -165,13 +172,16 @@
 
     <div id="hud-layer">
         <div class="header">
-            <div>OBR ENTITY AI</div>
+            <div>OBR ENTITY V3</div>
             <div id="bat-level">BAT: --%</div>
         </div>
 
         <div id="voice-display">
             <div id="ghost-text">...</div>
-            <div id="status-indicator">SISTEMA EN ESPERA</div>
+            <div id="status-container">
+                <div id="status-indicator">SISTEMA EN ESPERA</div>
+                <div id="idle-timer-bar"></div>
+            </div>
         </div>
 
         <div class="controls">
@@ -183,41 +193,42 @@
                 </label>
             </div>
 
-            <button id="manual-btn" onclick="triggerAI('El investigador pregunta: ¿Qué te pasó?')">PREGUNTAR AHORA</button>
+            <button id="manual-btn" onclick="manualInteraction()">PREGUNTAR AHORA</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        //  CONFIGURACIÓN OBR
+        //  CONFIGURACIÓN
         // ==========================================
         const API_KEY = "AIzaSyBkGJtUyHQ1OivROrZM1uDXjujBTxIYHI0"; // TU LLAVE
+        const IDLE_LIMIT = 120; // 120 segundos = 2 minutos
         
-        // Palabras "baratas" (locales) para rellenar silencios sin gastar API
+        // Palabras "baratas" para relleno local
         const LOCAL_FILLERS = [
             "Frio...", "Duele...", "Oscuridad...", "Solo...", "Ayuda...", 
             "Mama...", "Aqui...", "Vete...", "Miedo...", "Fuego...", 
             "Agua...", "Silencio...", "Ellos...", "No puedo...", "Atras..."
         ];
 
-        // Prompt de Personalidad para la IA
+        // Prompt de Personalidad (Víctima/Ente)
         const SYSTEM_PROMPT = `
-            Actúa como un espíritu atormentado atrapado en la ubicación actual.
-            Reglas estrictas:
-            1. NUNCA digas "veo una imagen" o "parece ser". TÚ ESTÁS AHÍ.
-            2. Si ves una pared sucia, di "Estas paredes me encierran".
-            3. Si ves oscuridad, di "La oscuridad me traga".
-            4. Si te preguntan qué te pasó, INVENTA una muerte basada en lo que ves (escaleras=caída, agua=ahogado, fuego=quemado).
-            5. Habla en PRIMERA PERSONA ("Me duele", "Estoy perdido").
-            6. Respuestas MUY CORTAS (máximo 5 palabras).
-            7. Muestra confusión, dolor o ira.
+            Actúa como un espíritu atormentado atrapado aquí.
+            Reglas:
+            1. Describe lo que ves en la imagen como si fuera tu prisión o lugar de muerte.
+            2. NUNCA digas "veo una imagen". ESTÁS AHÍ.
+            3. Inventa una causa de muerte basada en el entorno (escaleras=caída, cables=electrocutado).
+            4. Usa PRIMERA PERSONA ("Me duele", "Siento frío").
+            5. Respuestas CORTAS (máximo 5 palabras).
+            6. Tartamudea o muestra miedo.
         `;
         
-        // Variables
+        // Variables de Estado
         let audioCtx;
         let isProcessing = false;
         let autoInterval = null;
-        let lastSpeakTime = 0;
+        let lastInteraction = Date.now();
+        let idleCheckInterval = null;
         
         const els = {
             video: document.getElementById('camera-feed'),
@@ -225,37 +236,40 @@
             text: document.getElementById('ghost-text'),
             status: document.getElementById('status-indicator'),
             bat: document.getElementById('bat-level'),
-            toggle: document.getElementById('auto-toggle')
+            toggle: document.getElementById('auto-toggle'),
+            bar: document.getElementById('idle-timer-bar')
         };
 
         // --- INICIO ---
         document.body.addEventListener('click', async () => {
-            if(!audioCtx) {
-                initSystem();
-            }
+            if(!audioCtx) initSystem();
         }, {once:true});
 
         async function initSystem() {
             try {
-                // Audio
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
 
-                // Video
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'environment' } 
                 });
                 els.video.srcObject = stream;
 
-                // Batería
-                if(navigator.getBattery) {
-                    const b = await navigator.getBattery();
-                    updateBat(b);
-                    b.addEventListener('levelchange', () => updateBat(b));
+                // Sensores de Movimiento (Anomalías)
+                if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', handleSensors);
                 }
 
-                els.status.innerText = "SISTEMA ACTIVO";
-                speakText("Estoy... aquí...", 0.6);
+                if(navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    updateBat(b); b.addEventListener('levelchange', () => updateBat(b));
+                }
+
+                els.status.innerText = "SISTEMA ACTIVO - MONITOREANDO";
+                speakText("Escucho...", 0.6);
+
+                // Iniciar contador de inactividad
+                startIdleChecker();
 
             } catch (e) {
                 alert("Error: " + e.message);
@@ -267,162 +281,179 @@
             els.bat.style.color = b.level < 0.2 ? 'red' : 'white';
         }
 
-        // --- SISTEMA DE ACTIVIDAD AUTOMÁTICA ---
+        // --- LÓGICA DE AUTOMATIZACIÓN (CEREBRO V3) ---
+        
+        function resetIdleTimer(reason) {
+            lastInteraction = Date.now();
+            // Solo log visual si no es spam
+            if(reason !== 'sensor') {
+                console.log("Timer reiniciado por: " + reason);
+                els.bar.style.width = "0%";
+            }
+        }
+
+        function startIdleChecker() {
+            idleCheckInterval = setInterval(() => {
+                const now = Date.now();
+                const secondsSilent = (now - lastInteraction) / 1000;
+                
+                // Barra visual de progreso
+                const percentage = Math.min((secondsSilent / IDLE_LIMIT) * 100, 100);
+                els.bar.style.width = percentage + "%";
+
+                // CHEQUEO 2 MINUTOS
+                if (secondsSilent >= IDLE_LIMIT) {
+                    if (!els.toggle.checked) {
+                        // ACTIVAR AUTOMÁTICAMENTE
+                        els.toggle.checked = true;
+                        els.status.innerText = "INACTIVIDAD DETECTADA: MODO AUTO ON";
+                        els.status.style.color = "var(--primary)";
+                        startAutoLoop();
+                        resetIdleTimer('auto-start'); 
+                        speakText("¿Por qué... tanto... silencio?", 0.5);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Detector de Anomalías (Movimiento Brusco)
+        let lastX, lastY, lastZ;
+        function handleSensors(event) {
+            const acc = event.accelerationIncludingGravity;
+            if(!acc) return;
+
+            if(!lastX) { lastX = acc.x; lastY = acc.y; lastZ = acc.z; return; }
+
+            const deltaX = Math.abs(acc.x - lastX);
+            const deltaY = Math.abs(acc.y - lastY);
+            const deltaZ = Math.abs(acc.z - lastZ);
+
+            // Si hay movimiento significativo (alguien mueve el cel o golpea mesa)
+            if(deltaX + deltaY + deltaZ > 3) {
+                resetIdleTimer('sensor'); // REINICIA EL CONTADOR
+                
+                // Si la anomalía es MUY fuerte, forzar respuesta IA
+                if(deltaX + deltaY + deltaZ > 15 && !isProcessing) {
+                    triggerAI("¡Anomalía sísmica detectada! ¿Qué fue eso?");
+                }
+            }
+
+            lastX = acc.x; lastY = acc.y; lastZ = acc.z;
+        }
+
+        function manualInteraction() {
+            resetIdleTimer('manual');
+            triggerAI('El investigador pregunta: ¿Qué te pasó?');
+        }
+
+        // --- SISTEMA DE ACTIVIDAD CONSTANTE ---
         els.toggle.addEventListener('change', (e) => {
             if (e.target.checked) {
-                els.status.innerText = "ACTIVIDAD AUTOMÁTICA: ON";
                 startAutoLoop();
+                els.status.innerText = "ACTIVIDAD CONSTANTE: ON";
             } else {
-                els.status.innerText = "ACTIVIDAD AUTOMÁTICA: OFF";
                 stopAutoLoop();
+                els.status.innerText = "ACTIVIDAD CONSTANTE: OFF";
             }
+            resetIdleTimer('toggle');
         });
 
         function startAutoLoop() {
-            // Cada 8 a 15 segundos intenta decir algo
+            if(autoInterval) clearTimeout(autoInterval);
             loopStep();
         }
 
         function stopAutoLoop() {
-            clearTimeout(autoInterval);
+            if(autoInterval) clearTimeout(autoInterval);
         }
 
         function loopStep() {
             if (!els.toggle.checked) return;
 
-            const delay = 8000 + Math.random() * 7000; // 8 a 15 segs
+            const delay = 8000 + Math.random() * 7000; // 8-15 seg
             
             autoInterval = setTimeout(() => {
-                if(isProcessing) {
-                    loopStep(); // Si está ocupado, reintentar luego
-                    return;
-                }
+                if(isProcessing) { loopStep(); return; }
 
-                // DECISIÓN: ¿Usar IA (Inteligente) o Local (Ahorro)?
-                // 30% Probabilidad de IA (para no gastar tanta batería/API)
-                // 70% Probabilidad de Balbuceo Local
-                const useAI = Math.random() > 0.7; 
+                // 20% IA (Ahorro), 80% Local
+                const useAI = Math.random() > 0.8; 
 
                 if (useAI) {
-                    triggerAI("Manifiesta tu dolor o describe dónde estás brevemente.");
+                    triggerAI("Manifiesta tu presencia brevemente.");
                 } else {
                     const randomWord = LOCAL_FILLERS[Math.floor(Math.random() * LOCAL_FILLERS.length)];
-                    displayAndSpeak(randomWord, true); // true = es glitch local
+                    displayAndSpeak(randomWord, true);
                 }
-
-                loopStep(); // Siguiente ciclo
-
+                loopStep();
             }, delay);
         }
 
-        // --- CEREBRO: CONEXIÓN CON GEMINI ---
+        // --- CONEXIÓN IA ---
         async function triggerAI(contextPrompt) {
             if (isProcessing) return;
             isProcessing = true;
-            els.status.innerText = "SINTONIZANDO ENERGÍA...";
+            els.status.innerText = "SINTONIZANDO...";
             
             try {
-                // 1. Capturar Foto
-                els.canvas.width = 300; // Baja resolución para velocidad
+                // FOTO
+                els.canvas.width = 300; 
                 els.canvas.height = 300 * (els.video.videoHeight / els.video.videoWidth);
                 const ctx = els.canvas.getContext('2d');
                 ctx.drawImage(els.video, 0, 0, els.canvas.width, els.canvas.height);
                 const base64 = els.canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
-                // 2. Llamada API
+                // LLAMADA
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-                const payload = {
-                    contents: [{
-                        parts: [
-                            { text: SYSTEM_PROMPT + " Situación actual: " + contextPrompt },
-                            { inline_data: { mime_type: "image/jpeg", data: base64 } }
-                        ]
-                    }]
-                };
+                const payload = { contents: [{ parts: [ { text: SYSTEM_PROMPT + " Situación: " + contextPrompt }, { inline_data: { mime_type: "image/jpeg", data: base64 } } ] }] };
 
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                
+                const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
                 const data = await res.json();
                 
                 if (data.error) throw new Error(data.error.message);
                 
-                let reply = data.candidates[0].content.parts[0].text.trim();
-                
-                // Limpieza extra
-                reply = reply.replace(/[\*\"]/g, ''); 
-                
+                let reply = data.candidates[0].content.parts[0].text.trim().replace(/[\*\"]/g, '');
                 displayAndSpeak(reply, false);
 
             } catch (e) {
                 console.error(e);
-                els.status.innerText = "INTERFERENCIA...";
+                els.status.innerText = "SEÑAL DEBIL...";
             } finally {
                 isProcessing = false;
-                // Si estaba en modo auto, el loop seguirá su curso
-                if (!els.toggle.checked) els.status.innerText = "SISTEMA ACTIVO";
             }
         }
 
-        // --- VISUALIZACIÓN Y AUDIO (GLITCH) ---
+        // --- SALIDA (TEXTO + VOZ ROTA) ---
         function displayAndSpeak(text, isLocal) {
-            // Aplicar tartamudeo artificial al texto
-            // Ej: "Me duele" -> "M-me... duele..."
             const glitchedText = applyStutter(text);
-
+            
             els.text.innerText = glitchedText;
             els.text.style.opacity = 1;
             els.text.classList.remove('glitch-effect');
-            void els.text.offsetWidth; // Reiniciar animación CSS
+            void els.text.offsetWidth; 
             els.text.classList.add('glitch-effect');
 
-            if(isLocal) {
-                els.status.innerText = "ECO RESIDUAL";
-            } else {
-                els.status.innerText = "MANIFESTACIÓN INTELIGENTE";
-            }
-
+            els.status.innerText = isLocal ? "ECO RESIDUAL" : "RESPUESTA INTELIGENTE";
+            
             speakText(glitchedText);
 
-            // Ocultar texto después de un rato
-            setTimeout(() => {
-                els.text.style.opacity = 0;
-            }, 4000);
+            setTimeout(() => { els.text.style.opacity = 0; }, 4000);
         }
 
         function applyStutter(text) {
-            const words = text.split(" ");
-            return words.map(w => {
-                // 30% chance de tartamudear en palabras largas
-                if (w.length > 3 && Math.random() > 0.7) {
-                    return w.charAt(0) + "-" + w;
-                }
+            return text.split(" ").map(w => {
+                if (w.length > 3 && Math.random() > 0.7) return w.charAt(0) + "-" + w;
                 return w;
             }).join(" ");
         }
 
-        function speakText(text, forcedPitch = null) {
+        function speakText(text, forcedPitch) {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'es-MX';
-            
-            // Variar la voz para que suene a "múltiples espíritus"
-            // Pitch bajo (0.5 - 0.8) = Demoniaco/Hombre
-            // Pitch alto (1.2 - 1.5) = Niño/Mujer
-            // Si es local (relleno), usamos voz grave por defecto. Si es AI, random.
-            
-            const pitch = forcedPitch || (Math.random() > 0.5 ? (0.5 + Math.random()*0.3) : (1.1 + Math.random()*0.4));
-            u.pitch = pitch;
-            
-            u.rate = 0.8; // Lento
-            u.volume = 1.0;
-
+            u.pitch = forcedPitch || (Math.random() > 0.5 ? (0.6 + Math.random()*0.2) : (1.2 + Math.random()*0.3));
+            u.rate = 0.8;
             window.speechSynthesis.speak(u);
         }
-
     </script>
 </body>
 </html>
