@@ -2,28 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>VOX OBR - STABLE V5</title>
+    <title>ENTE OBR - V2</title>
     <style>
         :root {
-            --primary: #FFD700; /* Amarillo Viral */
-            --shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            --primary: #ff3333; /* Rojo sangre para esta versión */
+            --dim: #441111;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: #000;
-            color: #fff;
-            font-family: 'Arial Black', sans-serif;
+            color: var(--primary);
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             height: 100dvh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            user-select: none;
         }
 
         /* FONDO CÁMARA */
@@ -32,337 +29,400 @@
             top: 0; left: 0; width: 100%; height: 100%;
             object-fit: cover;
             z-index: -1;
+            filter: grayscale(100%) contrast(1.3) brightness(0.7);
         }
 
-        /* CAPA SUPERIOR (HUD) */
+        /* HUD */
         #hud-layer {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            z-index: 10;
-            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.8) 100%);
+            padding: 20px;
+            background: radial-gradient(circle, transparent 40%, #000 140%);
         }
 
-        .top-bar {
-            padding: 20px;
+        .header {
             display: flex;
             justify-content: space-between;
-            font-size: 0.9rem;
-            text-shadow: 1px 1px 2px #000;
             font-weight: bold;
+            text-shadow: 1px 1px 5px black;
         }
 
-        .rec-dot { color: red; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* ZONA CENTRAL */
-        .center-display {
+        /* VISUALIZADOR DE VOZ */
+        #voice-display {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            padding: 20px;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100px;
-            filter: drop-shadow(0 0 5px #000);
-            opacity: 0.9;
-            margin-bottom: 20px;
-        }
-
-        #ghost-word {
-            font-size: 2.5rem;
-            font-weight: 900;
             text-align: center;
-            color: var(--primary);
-            text-shadow: var(--shadow);
+        }
+
+        #ghost-text {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px var(--primary), 2px 2px 0 #000;
             text-transform: uppercase;
-            line-height: 1.1;
-            opacity: 0; /* Invisible por defecto */
-            transform: scale(0.9);
-            transition: opacity 0.3s ease-in, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            padding: 10px;
-            background: rgba(0,0,0,0.4); /* Fondo sutil para leer mejor */
-            border-radius: 10px;
+            max-width: 90%;
+            min-height: 3rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #status-indicator {
+            margin-top: 10px;
+            font-size: 0.7rem;
+            color: #aaa;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
         /* CONTROLES */
         .controls {
-            padding: 30px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
         }
 
-        #power-btn {
-            background: rgba(200, 0, 0, 0.8);
-            border: 3px solid #fff;
+        /* SWITCH AUTO */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #333;
+        }
+
+        .switch-label { font-size: 0.8rem; color: #fff; font-weight: bold; }
+
+        /* Toggle CSS puro */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        #manual-btn {
+            background: rgba(50, 0, 0, 0.8);
             color: white;
+            border: 2px solid var(--primary);
             padding: 15px 40px;
-            font-size: 1.2rem;
-            border-radius: 50px;
+            font-size: 1rem;
             font-weight: bold;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            border-radius: 50px;
+            box-shadow: 0 0 15px rgba(255,0,0,0.3);
             text-transform: uppercase;
         }
+        #manual-btn:active { background: var(--primary); color: black; }
 
-        #status-log {
-            position: absolute;
-            bottom: 100px;
-            width: 100%;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #aaa;
-            text-shadow: 1px 1px 1px #000;
-            pointer-events: none;
+        /* Animación de Glitch para texto */
+        .glitch-effect {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+            color: #ffaaaa;
         }
+        @keyframes shake { 
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+            40%, 60% { transform: translate3d(2px, 0, 0); }
+        }
+
     </style>
 </head>
 <body>
 
     <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="hidden-canvas" style="display:none;"></canvas>
 
     <div id="hud-layer">
-        <div class="top-bar">
-            <div>OBR SYSTEM V5</div>
-            <div><span class="rec-dot">●</span> REC</div>
+        <div class="header">
+            <div>OBR ENTITY AI</div>
+            <div id="bat-level">BAT: --%</div>
         </div>
 
-        <div class="center-display">
-            <canvas id="scope"></canvas>
-            <div id="ghost-word"></div>
+        <div id="voice-display">
+            <div id="ghost-text">...</div>
+            <div id="status-indicator">SISTEMA EN ESPERA</div>
         </div>
-
-        <div id="status-log">ESPERANDO ACTIVACIÓN...</div>
 
         <div class="controls">
-            <button id="power-btn">INICIAR SESIÓN</button>
+            <div class="switch-container">
+                <span class="switch-label">ACTIVIDAD CONSTANTE</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button id="manual-btn" onclick="triggerAI('El investigador pregunta: ¿Qué te pasó?')">PREGUNTAR AHORA</button>
         </div>
     </div>
 
     <script>
-        // --- BASE DE DATOS DE FRASES ---
-        const phrases = [
-            "NO SE ASUSTEN", "ESTOY AQUI", "ME AHOGUE", "AYUDA POR FAVOR",
-            "MIRA ATRAS", "HACE FRIO", "DONDE ESTAN", "NO ME VEO",
-            "BUSCO A MAMA", "FUE ACCIDENTE", "EN EL CANAL", "BAJO EL AGUA",
-            "SOY EL NIÑO", "QUIERO JUGAR", "NO TE VAYAS", "ESTA OSCURO",
-            "HOLA AMIGOS", "ESTOY SOLO", "TENGO MIEDO", "YA VOY",
-            "NO PUEDO", "SAL DE AQUI", "ELLOS VIENEN", "ESCUCHAME"
-        ];
+        // ==========================================
+        //  CONFIGURACIÓN OBR
+        // ==========================================
+        const API_KEY = "AIzaSyBkGJtUyHQ1OivROrZM1uDXjujBTxIYHI0"; // TU LLAVE
         
-        const words = [
-            "SI", "NO", "MAMA", "PAPA", "AGUA", "FUEGO", "LUZ", "ROJO",
-            "CRUZ", "DIOS", "CORRE", "ATRAS", "MIRA", "BAJO", "SOLO",
-            "NIÑO", "NIÑA", "TUMBA", "MUERTE", "DOLOR", "GRITO", "LLANTO"
+        // Palabras "baratas" (locales) para rellenar silencios sin gastar API
+        const LOCAL_FILLERS = [
+            "Frio...", "Duele...", "Oscuridad...", "Solo...", "Ayuda...", 
+            "Mama...", "Aqui...", "Vete...", "Miedo...", "Fuego...", 
+            "Agua...", "Silencio...", "Ellos...", "No puedo...", "Atras..."
         ];
 
-        // VARIABLES DE ESTADO
-        let state = {
-            active: false,
-            speaking: false, // BLOQUEO CLAVE: Impide que se corte la voz
-            audioCtx: null,
-            radioGain: null
-        };
-
+        // Prompt de Personalidad para la IA
+        const SYSTEM_PROMPT = `
+            Actúa como un espíritu atormentado atrapado en la ubicación actual.
+            Reglas estrictas:
+            1. NUNCA digas "veo una imagen" o "parece ser". TÚ ESTÁS AHÍ.
+            2. Si ves una pared sucia, di "Estas paredes me encierran".
+            3. Si ves oscuridad, di "La oscuridad me traga".
+            4. Si te preguntan qué te pasó, INVENTA una muerte basada en lo que ves (escaleras=caída, agua=ahogado, fuego=quemado).
+            5. Habla en PRIMERA PERSONA ("Me duele", "Estoy perdido").
+            6. Respuestas MUY CORTAS (máximo 5 palabras).
+            7. Muestra confusión, dolor o ira.
+        `;
+        
+        // Variables
+        let audioCtx;
+        let isProcessing = false;
+        let autoInterval = null;
+        let lastSpeakTime = 0;
+        
         const els = {
-            btn: document.getElementById('power-btn'),
-            word: document.getElementById('ghost-word'),
             video: document.getElementById('camera-feed'),
-            canvas: document.getElementById('scope'),
-            log: document.getElementById('status-log')
+            canvas: document.getElementById('hidden-canvas'),
+            text: document.getElementById('ghost-text'),
+            status: document.getElementById('status-indicator'),
+            bat: document.getElementById('bat-level'),
+            toggle: document.getElementById('auto-toggle')
         };
 
-        // --- INICIO DEL SISTEMA ---
-        els.btn.addEventListener('click', async () => {
-            if (state.active) return; // Ya está activo
-            
-            try {
-                // 1. Desbloquear Audio del Navegador (Truco iOS)
-                unlockAudio();
+        // --- INICIO ---
+        document.body.addEventListener('click', async () => {
+            if(!audioCtx) {
+                initSystem();
+            }
+        }, {once:true});
 
-                // 2. Pedir Permisos
+        async function initSystem() {
+            try {
+                // Audio
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+
+                // Video
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' }, 
-                    audio: true 
+                    video: { facingMode: 'environment' } 
                 });
                 els.video.srcObject = stream;
 
-                // 3. Iniciar Motor de Audio
-                initAudioEngine(stream);
+                // Batería
+                if(navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    updateBat(b);
+                    b.addEventListener('levelchange', () => updateBat(b));
+                }
 
-                // 4. UI
-                state.active = true;
-                els.btn.style.display = 'none'; // Ocultar botón
-                els.log.innerText = "ESCUCHANDO ENTORNO...";
-                
-                // 5. Iniciar Cerebro (Loop)
-                loopGraphics();
-                setInterval(brainLoop, 500); // Revisar cada 0.5s
+                els.status.innerText = "SISTEMA ACTIVO";
+                speakText("Estoy... aquí...", 0.6);
 
             } catch (e) {
-                alert("ERROR: Necesitas dar permisos de cámara y micrófono.");
-                console.error(e);
+                alert("Error: " + e.message);
+            }
+        }
+
+        function updateBat(b) {
+            els.bat.innerText = `BAT: ${Math.round(b.level * 100)}%`;
+            els.bat.style.color = b.level < 0.2 ? 'red' : 'white';
+        }
+
+        // --- SISTEMA DE ACTIVIDAD AUTOMÁTICA ---
+        els.toggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                els.status.innerText = "ACTIVIDAD AUTOMÁTICA: ON";
+                startAutoLoop();
+            } else {
+                els.status.innerText = "ACTIVIDAD AUTOMÁTICA: OFF";
+                stopAutoLoop();
             }
         });
 
-        // Truco para iOS: Reproducir silencio al tocar botón para habilitar TTS
-        function unlockAudio() {
+        function startAutoLoop() {
+            // Cada 8 a 15 segundos intenta decir algo
+            loopStep();
+        }
+
+        function stopAutoLoop() {
+            clearTimeout(autoInterval);
+        }
+
+        function loopStep() {
+            if (!els.toggle.checked) return;
+
+            const delay = 8000 + Math.random() * 7000; // 8 a 15 segs
+            
+            autoInterval = setTimeout(() => {
+                if(isProcessing) {
+                    loopStep(); // Si está ocupado, reintentar luego
+                    return;
+                }
+
+                // DECISIÓN: ¿Usar IA (Inteligente) o Local (Ahorro)?
+                // 30% Probabilidad de IA (para no gastar tanta batería/API)
+                // 70% Probabilidad de Balbuceo Local
+                const useAI = Math.random() > 0.7; 
+
+                if (useAI) {
+                    triggerAI("Manifiesta tu dolor o describe dónde estás brevemente.");
+                } else {
+                    const randomWord = LOCAL_FILLERS[Math.floor(Math.random() * LOCAL_FILLERS.length)];
+                    displayAndSpeak(randomWord, true); // true = es glitch local
+                }
+
+                loopStep(); // Siguiente ciclo
+
+            }, delay);
+        }
+
+        // --- CEREBRO: CONEXIÓN CON GEMINI ---
+        async function triggerAI(contextPrompt) {
+            if (isProcessing) return;
+            isProcessing = true;
+            els.status.innerText = "SINTONIZANDO ENERGÍA...";
+            
+            try {
+                // 1. Capturar Foto
+                els.canvas.width = 300; // Baja resolución para velocidad
+                els.canvas.height = 300 * (els.video.videoHeight / els.video.videoWidth);
+                const ctx = els.canvas.getContext('2d');
+                ctx.drawImage(els.video, 0, 0, els.canvas.width, els.canvas.height);
+                const base64 = els.canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+
+                // 2. Llamada API
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: SYSTEM_PROMPT + " Situación actual: " + contextPrompt },
+                            { inline_data: { mime_type: "image/jpeg", data: base64 } }
+                        ]
+                    }]
+                };
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                
+                if (data.error) throw new Error(data.error.message);
+                
+                let reply = data.candidates[0].content.parts[0].text.trim();
+                
+                // Limpieza extra
+                reply = reply.replace(/[\*\"]/g, ''); 
+                
+                displayAndSpeak(reply, false);
+
+            } catch (e) {
+                console.error(e);
+                els.status.innerText = "INTERFERENCIA...";
+            } finally {
+                isProcessing = false;
+                // Si estaba en modo auto, el loop seguirá su curso
+                if (!els.toggle.checked) els.status.innerText = "SISTEMA ACTIVO";
+            }
+        }
+
+        // --- VISUALIZACIÓN Y AUDIO (GLITCH) ---
+        function displayAndSpeak(text, isLocal) {
+            // Aplicar tartamudeo artificial al texto
+            // Ej: "Me duele" -> "M-me... duele..."
+            const glitchedText = applyStutter(text);
+
+            els.text.innerText = glitchedText;
+            els.text.style.opacity = 1;
+            els.text.classList.remove('glitch-effect');
+            void els.text.offsetWidth; // Reiniciar animación CSS
+            els.text.classList.add('glitch-effect');
+
+            if(isLocal) {
+                els.status.innerText = "ECO RESIDUAL";
+            } else {
+                els.status.innerText = "MANIFESTACIÓN INTELIGENTE";
+            }
+
+            speakText(glitchedText);
+
+            // Ocultar texto después de un rato
+            setTimeout(() => {
+                els.text.style.opacity = 0;
+            }, 4000);
+        }
+
+        function applyStutter(text) {
+            const words = text.split(" ");
+            return words.map(w => {
+                // 30% chance de tartamudear en palabras largas
+                if (w.length > 3 && Math.random() > 0.7) {
+                    return w.charAt(0) + "-" + w;
+                }
+                return w;
+            }).join(" ");
+        }
+
+        function speakText(text, forcedPitch = null) {
             window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance("Sistema activo");
-            u.volume = 0; // Silencio
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'es-MX';
+            
+            // Variar la voz para que suene a "múltiples espíritus"
+            // Pitch bajo (0.5 - 0.8) = Demoniaco/Hombre
+            // Pitch alto (1.2 - 1.5) = Niño/Mujer
+            // Si es local (relleno), usamos voz grave por defecto. Si es AI, random.
+            
+            const pitch = forcedPitch || (Math.random() > 0.5 ? (0.5 + Math.random()*0.3) : (1.1 + Math.random()*0.4));
+            u.pitch = pitch;
+            
+            u.rate = 0.8; // Lento
+            u.volume = 1.0;
+
             window.speechSynthesis.speak(u);
         }
 
-        function initAudioEngine(stream) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            state.audioCtx = new AudioContext();
-
-            // Micrófono (Visualizador)
-            const mic = state.audioCtx.createMediaStreamSource(stream);
-            state.analyser = state.audioCtx.createAnalyser();
-            state.analyser.fftSize = 256;
-            mic.connect(state.analyser);
-
-            // Radio Fantasma (Ruido de Fondo)
-            const bufferSize = 2 * state.audioCtx.sampleRate;
-            const buffer = state.audioCtx.createBuffer(1, bufferSize, state.audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-            const radioSrc = state.audioCtx.createBufferSource();
-            radioSrc.buffer = buffer;
-            radioSrc.loop = true;
-
-            const filter = state.audioCtx.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.value = 850;
-
-            state.radioGain = state.audioCtx.createGain();
-            state.radioGain.gain.value = 0.04; // Volumen base suave
-
-            radioSrc.connect(filter);
-            filter.connect(state.radioGain);
-            state.radioGain.connect(state.audioCtx.destination);
-            radioSrc.start();
-        }
-
-        // --- CEREBRO INTELIGENTE ---
-        function brainLoop() {
-            if (!state.active) return;
-            
-            // SI YA ESTÁ HABLANDO, NO HACER NADA (Evita cortes)
-            if (state.speaking) return;
-
-            // Probabilidad de disparo
-            // Simulamos que detecta algo. Ajustar 0.05 para más/menos frecuencia.
-            if (Math.random() < 0.06) {
-                triggerEntity();
-            }
-        }
-
-        function triggerEntity() {
-            // BLOQUEAR SISTEMA
-            state.speaking = true;
-
-            // Elegir texto
-            const usePhrase = Math.random() > 0.5; // 50% frase, 50% palabra
-            const text = usePhrase 
-                ? phrases[Math.floor(Math.random() * phrases.length)]
-                : words[Math.floor(Math.random() * words.length)];
-
-            const displayText = "-" + text; // Estilo OBR
-
-            // 1. MOSTRAR EN PANTALLA
-            els.word.innerText = displayText;
-            els.word.style.opacity = 1;
-            els.word.style.transform = "scale(1.0)";
-            els.log.innerText = "DTECTADO: " + text;
-
-            // 2. BAJAR VOLUMEN RADIO (Ducking)
-            const now = state.audioCtx.currentTime;
-            state.radioGain.gain.setValueAtTime(state.radioGain.gain.value, now);
-            state.radioGain.gain.linearRampToValueAtTime(0.001, now + 0.2); // Casi silencio
-
-            // 3. PREPARAR VOZ
-            window.speechSynthesis.cancel(); // Asegurar limpieza
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-MX';
-            utterance.rate = 0.9; // Velocidad normal
-            utterance.pitch = 0.7; // Tono un poco grave
-            utterance.volume = 1.0;
-
-            // 4. EVENTO: AL TERMINAR DE HABLAR
-            utterance.onend = () => {
-                finishSpeaking();
-            };
-
-            // Seguro contra fallos (si onend no dispara, forzar limpieza a los 4s)
-            setTimeout(() => {
-                if (state.speaking) finishSpeaking();
-            }, 4000);
-
-            // 5. HABLAR
-            window.speechSynthesis.speak(utterance);
-        }
-
-        function finishSpeaking() {
-            // Restaurar volumen radio
-            if(state.audioCtx) {
-                const now = state.audioCtx.currentTime;
-                state.radioGain.gain.cancelScheduledValues(now);
-                state.radioGain.gain.linearRampToValueAtTime(0.04, now + 1);
-            }
-
-            // Ocultar texto limpiamente
-            els.word.style.opacity = 0;
-            els.word.style.transform = "scale(0.9)";
-            
-            // Liberar bloqueo después de un breve respiro
-            setTimeout(() => {
-                state.speaking = false;
-                els.log.innerText = "ESCUCHANDO ENTORNO...";
-            }, 500);
-        }
-
-        // --- GRÁFICOS (VISUALIZADOR) ---
-        let ctx = null;
-        function loopGraphics() {
-            requestAnimationFrame(loopGraphics);
-            if (!state.active) return;
-
-            if (!ctx) {
-                els.canvas.width = els.canvas.offsetWidth;
-                els.canvas.height = els.canvas.offsetHeight;
-                ctx = els.canvas.getContext('2d');
-            }
-
-            const bufferLength = state.analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            state.analyser.getByteTimeDomainData(dataArray);
-
-            ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
-            ctx.lineWidth = 3;
-            // Verde si escucha, Rojo si habla la entidad
-            ctx.strokeStyle = state.speaking ? '#FFD700' : '#00FF00'; 
-            ctx.beginPath();
-
-            const sliceWidth = els.canvas.width * 1.0 / bufferLength;
-            let x = 0;
-
-            for(let i = 0; i < bufferLength; i++) {
-                const v = dataArray[i] / 128.0;
-                const y = v * els.canvas.height / 2;
-                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                x += sliceWidth;
-            }
-            ctx.stroke();
-        }
     </script>
 </body>
 </html>
